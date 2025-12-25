@@ -13,7 +13,7 @@ dist-ssr
 */**/*.local
 */**/.env
 */**/.env.*
-*/**/!.env.example
+!*/**/.env.example
 
 # Editor directories and files
 .vscode/*
@@ -31,6 +31,10 @@ dist-ssr
 *.sln
 *.sw?
 
+# Docker related
 downloads
 gluetun
 transmission_ui
+
+# Packages specific
+packages/transmission-monitor/data

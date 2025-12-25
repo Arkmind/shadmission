@@ -1,88 +1,106 @@
 import express from "express";
 import { createServer } from "http";
-import { WebSocketServer } from "ws";
-import { TransmissionMonitor } from "./monitor.js";
+import { WebSocket, WebSocketServer } from "ws";
+import { cleanupOldSnapshots, getSnapshots, saveSnapshot } from "./database.js";
+import { getTransferSnapshot } from "./monitor.js";
 
 const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
-const PORT = process.env.PORT || 3001;
-const TRANSMISSION_URL =
-  process.env.TRANSMISSION_URL || "http://localhost:9091";
-const TRANSMISSION_USER = process.env.TRANSMISSION_USER || "arky";
-const TRANSMISSION_PASS = process.env.TRANSMISSION_PASS || "arky";
-const POLL_INTERVAL = Number(process.env.POLL_INTERVAL) || 1000;
+const PORT = process.env.PORT ?? 3000;
+const SNAPSHOT_INTERVAL_MS = 1000;
+const CLEANUP_INTERVAL_MS = 60 * 60 * 1000; // Cleanup every hour
 
-const monitor = new TransmissionMonitor({
-  url: TRANSMISSION_URL,
-  username: TRANSMISSION_USER,
-  password: TRANSMISSION_PASS,
-  pollInterval: POLL_INTERVAL,
+// Store connected WebSocket clients
+const clients = new Set<WebSocket>();
+
+wss.on("connection", (ws) => {
+  clients.add(ws);
+  console.log(`Client connected. Total clients: ${clients.size}`);
+
+  ws.on("close", () => {
+    clients.delete(ws);
+    console.log(`Client disconnected. Total clients: ${clients.size}`);
+  });
+
+  ws.on("error", (error) => {
+    console.error("WebSocket error:", error);
+    clients.delete(ws);
+  });
 });
 
-// Middleware
-app.use(express.json());
+const broadcastSnapshot = (snapshot: object) => {
+  const message = JSON.stringify(snapshot);
+  for (const client of clients) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  }
+};
+
+// Collect and save snapshot every second
+const collectSnapshot = async () => {
+  try {
+    const snapshot = await getTransferSnapshot();
+    saveSnapshot(snapshot);
+    broadcastSnapshot(snapshot);
+  } catch (error) {
+    console.error("Error collecting snapshot:", error);
+  }
+};
+
+// Self-correcting interval that aligns to the second
+const startSnapshotCollection = () => {
+  const tick = () => {
+    collectSnapshot();
+    const now = Date.now();
+    const nextTick = SNAPSHOT_INTERVAL_MS - (now % SNAPSHOT_INTERVAL_MS);
+    setTimeout(tick, nextTick);
+  };
+
+  // Start at the next whole second
+  const now = Date.now();
+  const firstTick = SNAPSHOT_INTERVAL_MS - (now % SNAPSHOT_INTERVAL_MS);
+  setTimeout(tick, firstTick);
+};
+
+// REST endpoint to get X seconds of snapshots
+app.get("/snapshots", (req, res) => {
+  const seconds = parseInt(req.query.seconds as string) || 60;
+  const maxSeconds = 24 * 60 * 60; // Max 24 hours
+
+  const clampedSeconds = Math.min(Math.max(1, seconds), maxSeconds);
+  const snapshots = getSnapshots(clampedSeconds);
+
+  res.json({
+    count: snapshots.length,
+    seconds: clampedSeconds,
+    snapshots,
+  });
+});
 
 // Health check endpoint
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+  res.json({ status: "ok", timestamp: Date.now() });
 });
 
-// Get current stats
-app.get("/api/stats", async (_req, res) => {
-  try {
-    const stats = await monitor.getStats();
-    res.json(stats);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch stats" });
+// Start snapshot collection
+startSnapshotCollection();
+
+// Cleanup old snapshots periodically
+setInterval(() => {
+  const deleted = cleanupOldSnapshots();
+  if (deleted > 0) {
+    console.log(`Cleaned up ${deleted} old snapshots`);
   }
-});
+}, CLEANUP_INTERVAL_MS);
 
-// Get all torrents
-app.get("/api/torrents", async (_req, res) => {
-  try {
-    const torrents = await monitor.getTorrents();
-    res.json(torrents);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch torrents" });
-  }
-});
-
-// Get historical data
-app.get("/api/history", (_req, res) => {
-  const history = monitor.getHistory();
-  res.json(history);
-});
-
-// WebSocket connections for real-time updates
-wss.on("connection", (ws) => {
-  console.log("Client connected via WebSocket");
-
-  const unsubscribe = monitor.subscribe((data) => {
-    if (ws.readyState === ws.OPEN) {
-      ws.send(JSON.stringify(data));
-    }
-  });
-
-  ws.on("close", () => {
-    console.log("Client disconnected");
-    unsubscribe();
-  });
-});
-
-// Start the monitor
-monitor.start();
+// Initial cleanup on startup
+cleanupOldSnapshots();
 
 server.listen(PORT, () => {
-  console.log(`🚀 Transmission Monitor running on port ${PORT}`);
-  console.log(`   REST API: http://localhost:${PORT}/api`);
-  console.log(`   WebSocket: ws://localhost:${PORT}`);
-});
-
-// Graceful shutdown
-process.on("SIGTERM", () => {
-  console.log("Shutting down...");
-  monitor.stop();
-  server.close();
+  console.log(`Transmission Monitor running on port ${PORT}`);
+  console.log(`REST API: http://localhost:${PORT}/snapshots?seconds=60`);
+  console.log(`WebSocket: ws://localhost:${PORT}`);
 });
