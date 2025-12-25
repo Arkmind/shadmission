@@ -1,7 +1,12 @@
 import express from "express";
 import { createServer } from "http";
 import { WebSocket, WebSocketServer } from "ws";
-import { cleanupOldSnapshots, getSnapshots, saveSnapshot } from "./database.js";
+import {
+  cleanupOldSnapshots,
+  getSnapshots,
+  getSnapshotsByRange,
+  saveSnapshot,
+} from "./database.js";
 import { getTransferSnapshot } from "./monitor.js";
 
 const app = express();
@@ -73,8 +78,32 @@ const startSnapshotCollection = () => {
   setTimeout(tick, firstTick);
 };
 
-// REST endpoint to get X seconds of snapshots
+// REST endpoint to get snapshots - supports either seconds or from/to timestamps
 app.get("/snapshots", (req, res) => {
+  const from = parseInt(req.query.from as string);
+  const to = parseInt(req.query.to as string);
+
+  // If from/to provided, use range query
+  if (!isNaN(from) && !isNaN(to)) {
+    const maxRange = 24 * 60 * 60 * 1000; // Max 24 hours
+    const now = Date.now();
+    const cutoff = now - maxRange;
+
+    // Clamp to valid range
+    const clampedFrom = Math.max(from, cutoff);
+    const clampedTo = Math.min(to, now);
+
+    const snapshots = getSnapshotsByRange(clampedFrom, clampedTo);
+    res.json({
+      count: snapshots.length,
+      from: clampedFrom,
+      to: clampedTo,
+      snapshots,
+    });
+    return;
+  }
+
+  // Fallback to seconds-based query
   const seconds = parseInt(req.query.seconds as string) || 60;
   const maxSeconds = 24 * 60 * 60; // Max 24 hours
 

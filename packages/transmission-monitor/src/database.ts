@@ -70,6 +70,13 @@ const getSnapshotsSince = db.prepare(`
   ORDER BY timestamp ASC
 `);
 
+const getSnapshotsInRange = db.prepare(`
+  SELECT id, timestamp, upload, download, details
+  FROM snapshots
+  WHERE timestamp >= ? AND timestamp <= ?
+  ORDER BY timestamp ASC
+`);
+
 const deleteOldSnapshots = db.prepare(`
   DELETE FROM snapshots WHERE timestamp < ?
 `);
@@ -88,6 +95,21 @@ export const saveSnapshot = (snapshot: Omit<Snapshot, "id">): void => {
 export const getSnapshots = (seconds: number): Snapshot[] => {
   const since = Date.now() - seconds * 1000;
   const rows = getSnapshotsSince.all(since) as {
+    id: number;
+    timestamp: number;
+    upload: number;
+    download: number;
+    details: string;
+  }[];
+
+  return rows.map((row) => ({
+    ...row,
+    details: JSON.parse(row.details),
+  }));
+};
+
+export const getSnapshotsByRange = (from: number, to: number): Snapshot[] => {
+  const rows = getSnapshotsInRange.all(from, to) as {
     id: number;
     timestamp: number;
     upload: number;
