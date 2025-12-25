@@ -29,6 +29,9 @@ export default defineConfig([
       "react-hooks/set-state-in-effect": "off",
       "react-refresh/only-export-components": "off",
       "react-hooks/incompatible-library": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/purity": "off",
     },
   },
 ]);

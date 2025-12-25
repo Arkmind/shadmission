@@ -146,9 +146,7 @@ const columns: ColumnDef<NormalizedTorrent>[] = [
   },
 ];
 
-export interface TorrentListProps {}
-
-export const TorrentList: FC<TorrentListProps> = () => {
+export const TorrentList: FC = () => {
   const [data, setData] = useState<AllClientData | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(
     setTimeout(() => {})
@@ -156,7 +154,6 @@ export const TorrentList: FC<TorrentListProps> = () => {
 
   const getAllData = async () => {
     const list = await client.getAllData();
-    console.log("Torrent List Data:", list);
     setData(list);
 
     timeoutRef.current = setTimeout(getAllData, 1000);
