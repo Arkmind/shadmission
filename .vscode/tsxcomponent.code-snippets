@@ -1,0 +1,19 @@
+{
+	"React Typescript Component": {
+		"scope": "typescript,typescriptreact",
+		"prefix": "tsx:component",
+		"body": [
+			"import { type FC } from \"react\";",
+			"",
+			"export interface ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}Props {",
+			"  $2",
+			"}",
+			"",
+			"export const ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}: FC<${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}Props> = ($3) => {",
+			"  return <></>;$4",
+			"};",
+			"",
+		],
+		"description": "Create a react typescript component"
+	}
+}

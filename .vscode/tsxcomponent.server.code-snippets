@@ -1,0 +1,21 @@
+{
+	"React Typescript Component Server": {
+		"scope": "typescript,typescriptreact",
+		"prefix": "tsx:component:server",
+		"body": [
+			"\"use server\";",
+			"",
+			"import { FC } from \"react\";",
+			"",
+			"export interface ${1:${TM_FILENAME_BASE}}Props {",
+			"  $2",
+			"}",
+			"",
+			"export const ${1:${TM_FILENAME_BASE}}: FC<${1:${TM_FILENAME_BASE}}Props> = ($3) => {",
+			"  return <></>;$4",
+			"};",
+			"",
+		],
+		"description": "Create a react typescript component server side"
+	}
+}

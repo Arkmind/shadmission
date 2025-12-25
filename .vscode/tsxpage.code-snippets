@@ -1,0 +1,19 @@
+{
+	"React Typescript Page": {
+		"scope": "typescript,typescriptreact",
+		"prefix": "tsx:page",
+		"body": [
+			"import { FC } from \"react\";",
+			"",
+			"export interface $1Props {}",
+			"",
+			"const $1: FC<$1Props> = () => {",
+			"  return <></>;$2",
+			"};",
+			"",
+			"export default $1;",
+			"",
+		],
+		"description": "Create a react typescript page"
+	}
+}

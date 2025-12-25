@@ -1,0 +1,21 @@
+{
+	"React Typescript Component Client": {
+		"scope": "typescript,typescriptreact",
+		"prefix": "tsx:component:client",
+		"body": [
+			"\"use client\";",
+			"",
+			"import { FC } from \"react\";",
+			"",
+			"export interface ${1:${TM_FILENAME_BASE}}Props {",
+			"  $2",
+			"}",
+			"",
+			"export const ${1:${TM_FILENAME_BASE}}: FC<${1:${TM_FILENAME_BASE}}Props> = ($3) => {",
+			"  return <></>;$4",
+			"};",
+			"",
+		],
+		"description": "Create a react typescript component client side"
+	}
+}

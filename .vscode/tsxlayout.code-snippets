@@ -1,0 +1,21 @@
+{
+	"React Typescript Layout": {
+		"scope": "typescript,typescriptreact",
+		"prefix": "tsx:layout",
+		"body": [
+			"import { FC, ReactNode } from \"react\";",
+			"",
+			"export interface $1LayoutProps {",
+            "  children: ReactNode;$2",
+			"}",
+			"",
+			"const $1Layout: FC<$1LayoutProps> = ({ children$4 }) => {",
+			"  return <>{children}</>;$5",
+			"};",
+			"",
+			"export default $1Layout;",
+			"",
+		],
+		"description": "Create a react typescript layout"
+	}
+}
