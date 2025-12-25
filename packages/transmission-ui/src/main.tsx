@@ -7,6 +7,7 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { Dashboard } from "./pages/dashboard.tsx";
 
 import { ThemeProvider } from "./components/theme-provider/theme-provider.tsx";
+import { Toaster } from "./components/ui/sonner.tsx";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
@@ -19,6 +20,7 @@ createRoot(document.getElementById("root")!).render(
           </Routes>
         </BrowserRouter>
       </div>
+      <Toaster />
     </ThemeProvider>
   </StrictMode>
 );

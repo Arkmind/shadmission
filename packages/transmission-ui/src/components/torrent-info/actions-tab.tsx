@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { client } from "@/lib/transmission";
 import { SaveIcon } from "lucide-react";
 import { memo, useCallback, useEffect, useState, type FC } from "react";
+import { toast } from "sonner";
 import type { RawTorrentData, TorrentTabProps } from "./types";
 
 interface TorrentSettings {
@@ -140,9 +141,19 @@ export const ActionsTab: FC<TorrentTabProps> = memo(
           });
         }
 
+        toast.success("Settings saved", {
+          description: "Torrent settings have been updated successfully.",
+        });
+
         onUpdate?.();
       } catch (error) {
         console.error("Failed to save settings:", error);
+        toast.error("Failed to save settings", {
+          description:
+            error instanceof Error
+              ? error.message
+              : "An unknown error occurred",
+        });
       } finally {
         setSaving(false);
       }
