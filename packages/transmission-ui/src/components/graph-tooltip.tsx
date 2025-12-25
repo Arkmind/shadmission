@@ -1,12 +1,12 @@
-import type { GraphTorrentDetail } from "@/hooks/use-snapshots";
+import type { TorrentDetail } from "@/lib/monitor";
 import { formatSpeed } from "@/lib/utils";
 import type { FC } from "react";
 
 interface GraphTooltipData {
-  date: number;
+  timestamp: number;
   upload: number;
   download: number;
-  details?: GraphTorrentDetail[];
+  details?: TorrentDetail[];
 }
 
 interface GraphTooltipProps {
@@ -20,15 +20,15 @@ export const GraphTooltip: FC<GraphTooltipProps> = ({ active, payload }) => {
   const data = payload[0]?.payload;
   if (!data) return null;
 
-  const date = new Date(data.date);
+  const timestamp = new Date(data.timestamp);
   const details = data.details ?? [];
 
   return (
     <div className="bg-background border rounded-lg shadow-lg p-3 min-w-48">
       <div className="text-sm font-medium mb-2">
-        {isNaN(date.getTime())
+        {isNaN(timestamp.getTime())
           ? "Invalid time"
-          : date.toLocaleTimeString(navigator.language, {
+          : timestamp.toLocaleTimeString(navigator.language, {
               hour: "numeric",
               minute: "numeric",
               second: "numeric",

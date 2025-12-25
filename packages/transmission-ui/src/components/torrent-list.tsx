@@ -146,15 +146,41 @@ const columns: ColumnDef<NormalizedTorrent>[] = [
   },
 ];
 
-export const TorrentList: FC = () => {
+export interface TorrentListProps {
+  onClick?: (torrent: NormalizedTorrent | null) => void;
+}
+
+export const TorrentList: FC<TorrentListProps> = ({ onClick }) => {
   const [data, setData] = useState<AllClientData | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(
     setTimeout(() => {})
   );
+  const clickedTorrentRef = useRef<NormalizedTorrent | null>(null);
+
+  const handleClick = (torrent: NormalizedTorrent) => {
+    if (clickedTorrentRef.current?.id === torrent.id) {
+      clickedTorrentRef.current = null;
+      onClick?.(null);
+      return;
+    }
+
+    clickedTorrentRef.current = torrent;
+    onClick?.(torrent);
+  };
 
   const getAllData = async () => {
     const list = await client.getAllData();
     setData(list);
+
+    if (clickedTorrentRef.current) {
+      const updatedTorrent = list.torrents.find(
+        (t) => t.id === clickedTorrentRef.current?.id
+      );
+      if (updatedTorrent) {
+        clickedTorrentRef.current = updatedTorrent;
+        onClick?.(updatedTorrent);
+      }
+    }
 
     timeoutRef.current = setTimeout(getAllData, 1000);
   };
@@ -174,6 +200,7 @@ export const TorrentList: FC = () => {
       data={data?.torrents || []}
       enableSorting
       enableRowSelection
+      onClickRow={handleClick}
     />
   );
 };

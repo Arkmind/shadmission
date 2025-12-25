@@ -11,12 +11,14 @@ interface UseSnapshotsOptions {
   seconds?: number;
   autoReconnect?: boolean;
   reconnectDelay?: number;
+  bufferSize?: number;
 }
 
 export const useSnapshots = ({
   seconds = 300,
   autoReconnect = true,
   reconnectDelay = 3000,
+  bufferSize = 1000,
 }: UseSnapshotsOptions = {}) => {
   const [, forceUpdate] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
@@ -26,6 +28,7 @@ export const useSnapshots = ({
   const reconnectTimeoutRef = useRef<number | null>(null);
   const isLiveRef = useRef(true);
   const dataRef = useRef<Snapshot[]>([]);
+  const connectRef = useRef<() => void>(null);
 
   const setData = useCallback(
     (newData: Snapshot[] | ((prev: Snapshot[]) => Snapshot[])) => {
@@ -82,6 +85,9 @@ export const useSnapshots = ({
       (snapshot) => {
         setData((prevData) => {
           if (isLiveRef.current) {
+            if (prevData.length >= bufferSize) {
+              return [...prevData.slice(1), snapshot];
+            }
             return [...prevData, snapshot];
           }
           return prevData;
@@ -97,7 +103,7 @@ export const useSnapshots = ({
         wsRef.current = null;
         if (autoReconnect) {
           reconnectTimeoutRef.current = window.setTimeout(() => {
-            connect();
+            connectRef.current?.();
           }, reconnectDelay);
         }
       }
@@ -105,6 +111,8 @@ export const useSnapshots = ({
 
     wsRef.current = ws;
   }, [autoReconnect, reconnectDelay]);
+
+  connectRef.current = connect;
 
   const disconnect = useCallback(() => {
     if (wsRef.current) {

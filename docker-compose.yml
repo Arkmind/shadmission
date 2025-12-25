@@ -59,7 +59,7 @@ services:
       PASS: arky
       PUID: 1000
       PGID: 1000
-      # TRANSMISSION_WEB_HOME: /webui/public
+      TRANSMISSION_WEB_HOME: /webui/dist
       WATCH_DIR_ENABLED: "false"
       INCOMPLETE_DIR_ENABLED: "false"
     volumes:

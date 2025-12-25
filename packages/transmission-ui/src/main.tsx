@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-globalThis.Buffer = Buffer;
+(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -13,7 +13,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
       <div className="p-3 h-svh">
-        <BrowserRouter>
+        <BrowserRouter basename="/transmission/web">
           <Routes>
             <Route path="/" element={<Dashboard />} />
           </Routes>

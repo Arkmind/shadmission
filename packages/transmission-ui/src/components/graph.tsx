@@ -6,7 +6,7 @@ import {
   ChartTooltip,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { useSnapshots, type UseSnapshotsReturn } from "@/hooks/use-snapshots";
+import { useSnapshots } from "@/hooks/use-snapshots";
 import { formatSpeed, formatTime } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState, type FC } from "react";
 
@@ -21,11 +21,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export interface GraphProps {
-  snapshots: UseSnapshotsReturn;
-}
-
-export const Graph: FC<GraphProps> = () => {
+export const Graph: FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { data, isConnected, isLoading, error, updateSnapshot } =
     useSnapshots();
@@ -132,13 +128,7 @@ export const Graph: FC<GraphProps> = () => {
         config={chartConfig}
         className="min-h-52 h-full w-full pb-4"
       >
-        <AreaChart
-          data={data.map((snapshot) => ({
-            date: snapshot.timestamp,
-            upload: snapshot.upload,
-            download: snapshot.download,
-          }))}
-        >
+        <AreaChart data={data}>
           <defs>
             <linearGradient id="fillUpload" x1="0" y1="0" x2="0" y2="1">
               <stop
@@ -167,7 +157,7 @@ export const Graph: FC<GraphProps> = () => {
           </defs>
           <CartesianGrid vertical={false} />
           <XAxis
-            dataKey="date"
+            dataKey="timestamp"
             type="number"
             domain={["dataMin", "dataMax"]}
             tickLine={false}

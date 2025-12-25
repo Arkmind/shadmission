@@ -1,4 +1,4 @@
-import type { GraphData } from "@/hooks/use-snapshots";
+import { useSnapshots } from "@/hooks/use-snapshots";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { type FC, useMemo } from "react";
 
@@ -13,12 +13,11 @@ const formatSpeed = (bytes: number): { value: string; unit: string } => {
   };
 };
 
-export interface LiveTransferProps {
-  data: GraphData[];
-  isConnected: boolean;
-}
+export const LiveTransfer: FC = () => {
+  const { data, isConnected } = useSnapshots({
+    bufferSize: 1,
+  });
 
-export const LiveTransfer: FC<LiveTransferProps> = ({ data, isConnected }) => {
   const currentSpeed = useMemo(() => {
     if (data.length === 0) {
       return {
@@ -28,8 +27,8 @@ export const LiveTransfer: FC<LiveTransferProps> = ({ data, isConnected }) => {
     }
     const latest = data[data.length - 1];
     return {
-      upload: formatSpeed(latest.upload),
-      download: formatSpeed(latest.download),
+      upload: formatSpeed(latest.upload || 0),
+      download: formatSpeed(latest.download || 0),
     };
   }, [data]);
 

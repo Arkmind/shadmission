@@ -60,6 +60,7 @@ interface DataTableProps<TData, TValue> {
   actions?: DataTableAction<TData>[];
   // Selection callback
   onRowSelectionChange?: (selectedRows: TData[]) => void;
+  onClickRow?: (row: TData) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -77,6 +78,7 @@ export function DataTable<TData, TValue>({
   enableActions = false,
   actions = [],
   onRowSelectionChange,
+  onClickRow,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -279,6 +281,7 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() => onClickRow?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
