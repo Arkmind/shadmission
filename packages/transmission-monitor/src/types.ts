@@ -1,20 +1,16 @@
 // Re-export types for external use
-export type { MonitorConfig, TorrentInfo, TransferStats } from "./monitor.js";
+export type { Snapshot, TorrentDetail } from "./database.js";
+export type { PeerInfo, TorrentTransfer } from "./monitor.js";
 
 // WebSocket message types
 export interface WSMessage {
-  type: "stats" | "torrent-update" | "error";
+  type: "snapshot" | "error";
   data: unknown;
 }
 
-export interface StatsMessage extends WSMessage {
-  type: "stats";
-  data: import("./monitor.js").TransferStats;
-}
-
-export interface TorrentUpdateMessage extends WSMessage {
-  type: "torrent-update";
-  data: import("./monitor.js").TorrentInfo[];
+export interface SnapshotMessage extends WSMessage {
+  type: "snapshot";
+  data: import("./database.js").Snapshot;
 }
 
 export interface ErrorMessage extends WSMessage {

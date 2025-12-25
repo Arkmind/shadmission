@@ -30,17 +30,32 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_snapshots_timestamp ON snapshots(timestamp)
 `);
 
+export interface PeerInfo {
+  ip: string;
+  port: number;
+  country: string | null;
+  client: string;
+  downloadSpeed: number;
+  uploadSpeed: number;
+  isSeeder: boolean;
+  isDownloading: boolean;
+  isUploading: boolean;
+}
+
+export interface TorrentDetail {
+  torrent: string;
+  torrent_id: number;
+  upload: number;
+  download: number;
+  peers: PeerInfo[];
+}
+
 export interface Snapshot {
   id?: number;
   timestamp: number;
   upload: number | null;
   download: number | null;
-  details: {
-    torrent: string;
-    torrent_id: string;
-    upload: number;
-    download: number;
-  }[];
+  details: TorrentDetail[];
 }
 
 const insertSnapshot = db.prepare(`

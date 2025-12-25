@@ -12,6 +12,14 @@ const PORT = process.env.PORT ?? 3000;
 const SNAPSHOT_INTERVAL_MS = 1000;
 const CLEANUP_INTERVAL_MS = 60 * 60 * 1000; // Cleanup every hour
 
+// CORS middleware
+app.use((_req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  next();
+});
+
 // Store connected WebSocket clients
 const clients = new Set<WebSocket>();
 
