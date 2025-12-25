@@ -1,0 +1,616 @@
+{
+    "arguments": {
+        "torrents": [
+            {
+                "id": 1,
+                "name": "Ubuntu 24.04 LTS ISO",
+                "status": 6,
+                "hashString": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0",
+                "percentDone": 1,
+                "totalSize": 5765318656,
+                "sizeWhenDone": 5765318656,
+                "leftUntilDone": 0,
+                "uploadedEver": 12458963214,
+                "downloadedEver": 5765318656,
+                "uploadRatio": 2.16,
+                "rateDownload": 0,
+                "rateUpload": 1048576,
+                "peersConnected": 24,
+                "peersSendingToUs": 0,
+                "peersGettingFromUs": 8,
+                "seeders": 156,
+                "leechers": 42,
+                "eta": -1,
+                "isFinished": true,
+                "isStalled": false,
+                "addedDate": 1703001600,
+                "doneDate": 1703005200,
+                "activityDate": 1735056000,
+                "downloadDir": "/downloads/linux-isos",
+                "error": 0,
+                "errorString": "",
+                "trackerStats": [
+                    {
+                        "host": "tracker.ubuntu.com",
+                        "announceState": 1,
+                        "seederCount": 156,
+                        "leecherCount": 42,
+                        "lastAnnounceSucceeded": true
+                    }
+                ],
+                "files": [
+                    {
+                        "name": "ubuntu-24.04-desktop-amd64.iso",
+                        "length": 5765318656,
+                        "bytesCompleted": 5765318656
+                    }
+                ],
+                "labels": [
+                    "linux",
+                    "iso",
+                    "seeding"
+                ],
+                "magnetLink": "magnet:?xt=urn:btih:a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0&dn=Ubuntu+24.04+LTS+ISO"
+            },
+            {
+                "id": 2,
+                "name": "Fedora 40 Workstation",
+                "status": 4,
+                "hashString": "b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1",
+                "percentDone": 0.6847,
+                "totalSize": 2147483648,
+                "sizeWhenDone": 2147483648,
+                "leftUntilDone": 676986880,
+                "uploadedEver": 536870912,
+                "downloadedEver": 1470496768,
+                "uploadRatio": 0.36,
+                "rateDownload": 5242880,
+                "rateUpload": 524288,
+                "peersConnected": 18,
+                "peersSendingToUs": 6,
+                "peersGettingFromUs": 3,
+                "seeders": 89,
+                "leechers": 67,
+                "eta": 129,
+                "isFinished": false,
+                "isStalled": false,
+                "addedDate": 1735052400,
+                "doneDate": 0,
+                "activityDate": 1735056000,
+                "downloadDir": "/downloads/linux-isos",
+                "error": 0,
+                "errorString": "",
+                "trackerStats": [
+                    {
+                        "host": "torrent.fedoraproject.org",
+                        "announceState": 1,
+                        "seederCount": 89,
+                        "leecherCount": 67,
+                        "lastAnnounceSucceeded": true
+                    }
+                ],
+                "files": [
+                    {
+                        "name": "Fedora-Workstation-Live-x86_64-40.iso",
+                        "length": 2147483648,
+                        "bytesCompleted": 1470496768
+                    }
+                ],
+                "labels": [
+                    "linux",
+                    "iso"
+                ],
+                "magnetLink": "magnet:?xt=urn:btih:b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1&dn=Fedora+40+Workstation"
+            },
+            {
+                "id": 3,
+                "name": "Arch Linux Latest",
+                "status": 6,
+                "hashString": "c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2",
+                "percentDone": 1,
+                "totalSize": 891289600,
+                "sizeWhenDone": 891289600,
+                "leftUntilDone": 0,
+                "uploadedEver": 8912896000,
+                "downloadedEver": 891289600,
+                "uploadRatio": 10.0,
+                "rateDownload": 0,
+                "rateUpload": 1310720,
+                "peersConnected": 32,
+                "peersSendingToUs": 0,
+                "peersGettingFromUs": 12,
+                "seeders": 234,
+                "leechers": 78,
+                "eta": -1,
+                "isFinished": true,
+                "isStalled": false,
+                "addedDate": 1702396800,
+                "doneDate": 1702398600,
+                "activityDate": 1735056000,
+                "downloadDir": "/downloads/linux-isos",
+                "error": 0,
+                "errorString": "",
+                "trackerStats": [
+                    {
+                        "host": "tracker.archlinux.org",
+                        "announceState": 1,
+                        "seederCount": 234,
+                        "leecherCount": 78,
+                        "lastAnnounceSucceeded": true
+                    }
+                ],
+                "files": [
+                    {
+                        "name": "archlinux-2024.12.01-x86_64.iso",
+                        "length": 891289600,
+                        "bytesCompleted": 891289600
+                    }
+                ],
+                "labels": [
+                    "linux",
+                    "iso",
+                    "seeding"
+                ],
+                "magnetLink": "magnet:?xt=urn:btih:c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2&dn=Arch+Linux+Latest"
+            },
+            {
+                "id": 4,
+                "name": "Debian 12 NetInstall",
+                "status": 4,
+                "hashString": "d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3",
+                "percentDone": 0.4523,
+                "totalSize": 419430400,
+                "sizeWhenDone": 419430400,
+                "leftUntilDone": 229703270,
+                "uploadedEver": 94371840,
+                "downloadedEver": 189727130,
+                "uploadRatio": 0.49,
+                "rateDownload": 3145728,
+                "rateUpload": 262144,
+                "peersConnected": 14,
+                "peersSendingToUs": 5,
+                "peersGettingFromUs": 2,
+                "seeders": 167,
+                "leechers": 34,
+                "eta": 73,
+                "isFinished": false,
+                "isStalled": false,
+                "addedDate": 1735054800,
+                "doneDate": 0,
+                "activityDate": 1735056000,
+                "downloadDir": "/downloads/linux-isos",
+                "error": 0,
+                "errorString": "",
+                "trackerStats": [
+                    {
+                        "host": "bttracker.debian.org",
+                        "announceState": 1,
+                        "seederCount": 167,
+                        "leecherCount": 34,
+                        "lastAnnounceSucceeded": true
+                    }
+                ],
+                "files": [
+                    {
+                        "name": "debian-12.4.0-amd64-netinst.iso",
+                        "length": 419430400,
+                        "bytesCompleted": 189727130
+                    }
+                ],
+                "labels": [
+                    "linux",
+                    "iso"
+                ],
+                "magnetLink": "magnet:?xt=urn:btih:d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3&dn=Debian+12+NetInstall"
+            },
+            {
+                "id": 5,
+                "name": "Linux Mint 21.3 Cinnamon",
+                "status": 0,
+                "hashString": "e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4",
+                "percentDone": 1,
+                "totalSize": 2831155200,
+                "sizeWhenDone": 2831155200,
+                "leftUntilDone": 0,
+                "uploadedEver": 5662310400,
+                "downloadedEver": 2831155200,
+                "uploadRatio": 2.0,
+                "rateDownload": 0,
+                "rateUpload": 0,
+                "peersConnected": 0,
+                "peersSendingToUs": 0,
+                "peersGettingFromUs": 0,
+                "seeders": 98,
+                "leechers": 23,
+                "eta": -1,
+                "isFinished": true,
+                "isStalled": true,
+                "addedDate": 1701792000,
+                "doneDate": 1701795600,
+                "activityDate": 1734969600,
+                "downloadDir": "/downloads/linux-isos",
+                "error": 0,
+                "errorString": "",
+                "trackerStats": [
+                    {
+                        "host": "torrents.linuxmint.com",
+                        "announceState": 1,
+                        "seederCount": 98,
+                        "leecherCount": 23,
+                        "lastAnnounceSucceeded": true
+                    }
+                ],
+                "files": [
+                    {
+                        "name": "linuxmint-21.3-cinnamon-64bit.iso",
+                        "length": 2831155200,
+                        "bytesCompleted": 2831155200
+                    }
+                ],
+                "labels": [
+                    "linux",
+                    "iso",
+                    "paused"
+                ],
+                "magnetLink": "magnet:?xt=urn:btih:e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4&dn=Linux+Mint+21.3+Cinnamon"
+            },
+            {
+                "id": 6,
+                "name": "Pop!_OS 22.04 LTS",
+                "status": 4,
+                "hashString": "f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5",
+                "percentDone": 0.2156,
+                "totalSize": 2684354560,
+                "sizeWhenDone": 2684354560,
+                "leftUntilDone": 2105540403,
+                "uploadedEver": 134217728,
+                "downloadedEver": 578814157,
+                "uploadRatio": 0.23,
+                "rateDownload": 4194304,
+                "rateUpload": 419430,
+                "peersConnected": 21,
+                "peersSendingToUs": 8,
+                "peersGettingFromUs": 4,
+                "seeders": 76,
+                "leechers": 45,
+                "eta": 501,
+                "isFinished": false,
+                "isStalled": false,
+                "addedDate": 1735055100,
+                "doneDate": 0,
+                "activityDate": 1735056000,
+                "downloadDir": "/downloads/linux-isos",
+                "error": 0,
+                "errorString": "",
+                "trackerStats": [
+                    {
+                        "host": "tracker.pop-os.org",
+                        "announceState": 1,
+                        "seederCount": 76,
+                        "leecherCount": 45,
+                        "lastAnnounceSucceeded": true
+                    }
+                ],
+                "files": [
+                    {
+                        "name": "pop-os_22.04_amd64_intel_38.iso",
+                        "length": 2684354560,
+                        "bytesCompleted": 578814157
+                    }
+                ],
+                "labels": [
+                    "linux",
+                    "iso"
+                ],
+                "magnetLink": "magnet:?xt=urn:btih:f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5&dn=Pop!_OS+22.04+LTS"
+            },
+            {
+                "id": 7,
+                "name": "openSUSE Tumbleweed DVD",
+                "status": 6,
+                "hashString": "g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6",
+                "percentDone": 1,
+                "totalSize": 4831838208,
+                "sizeWhenDone": 4831838208,
+                "leftUntilDone": 0,
+                "uploadedEver": 14495514624,
+                "downloadedEver": 4831838208,
+                "uploadRatio": 3.0,
+                "rateDownload": 0,
+                "rateUpload": 786432,
+                "peersConnected": 15,
+                "peersSendingToUs": 0,
+                "peersGettingFromUs": 5,
+                "seeders": 112,
+                "leechers": 56,
+                "eta": -1,
+                "isFinished": true,
+                "isStalled": false,
+                "addedDate": 1702915200,
+                "doneDate": 1702922400,
+                "activityDate": 1735056000,
+                "downloadDir": "/downloads/linux-isos",
+                "error": 0,
+                "errorString": "",
+                "trackerStats": [
+                    {
+                        "host": "tracker.opensuse.org",
+                        "announceState": 1,
+                        "seederCount": 112,
+                        "leecherCount": 56,
+                        "lastAnnounceSucceeded": true
+                    }
+                ],
+                "files": [
+                    {
+                        "name": "openSUSE-Tumbleweed-DVD-x86_64.iso",
+                        "length": 4831838208,
+                        "bytesCompleted": 4831838208
+                    }
+                ],
+                "labels": [
+                    "linux",
+                    "iso",
+                    "seeding"
+                ],
+                "magnetLink": "magnet:?xt=urn:btih:g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6&dn=openSUSE+Tumbleweed+DVD"
+            },
+            {
+                "id": 8,
+                "name": "Manjaro KDE Full",
+                "status": 3,
+                "hashString": "h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7",
+                "percentDone": 0.0834,
+                "totalSize": 3758096384,
+                "sizeWhenDone": 3758096384,
+                "leftUntilDone": 3444802806,
+                "uploadedEver": 31354880,
+                "downloadedEver": 313293578,
+                "uploadRatio": 0.10,
+                "rateDownload": 0,
+                "rateUpload": 0,
+                "peersConnected": 3,
+                "peersSendingToUs": 0,
+                "peersGettingFromUs": 1,
+                "seeders": 45,
+                "leechers": 89,
+                "eta": -1,
+                "isFinished": false,
+                "isStalled": true,
+                "addedDate": 1735048800,
+                "doneDate": 0,
+                "activityDate": 1735051200,
+                "downloadDir": "/downloads/linux-isos",
+                "error": 0,
+                "errorString": "",
+                "trackerStats": [
+                    {
+                        "host": "tracker.manjaro.org",
+                        "announceState": 1,
+                        "seederCount": 45,
+                        "leecherCount": 89,
+                        "lastAnnounceSucceeded": true
+                    }
+                ],
+                "files": [
+                    {
+                        "name": "manjaro-kde-24.0-240601-linux69.iso",
+                        "length": 3758096384,
+                        "bytesCompleted": 313293578
+                    }
+                ],
+                "labels": [
+                    "linux",
+                    "iso",
+                    "queued"
+                ],
+                "magnetLink": "magnet:?xt=urn:btih:h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7&dn=Manjaro+KDE+Full"
+            },
+            {
+                "id": 9,
+                "name": "elementary OS 7.1",
+                "status": 4,
+                "hashString": "i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8",
+                "percentDone": 0.9234,
+                "totalSize": 3006477107,
+                "sizeWhenDone": 3006477107,
+                "leftUntilDone": 230296509,
+                "uploadedEver": 1503238553,
+                "downloadedEver": 2776180598,
+                "uploadRatio": 0.54,
+                "rateDownload": 6291456,
+                "rateUpload": 838860,
+                "peersConnected": 27,
+                "peersSendingToUs": 9,
+                "peersGettingFromUs": 6,
+                "seeders": 134,
+                "leechers": 28,
+                "eta": 37,
+                "isFinished": false,
+                "isStalled": false,
+                "addedDate": 1735045200,
+                "doneDate": 0,
+                "activityDate": 1735056000,
+                "downloadDir": "/downloads/linux-isos",
+                "error": 0,
+                "errorString": "",
+                "trackerStats": [
+                    {
+                        "host": "tracker.elementary.io",
+                        "announceState": 1,
+                        "seederCount": 134,
+                        "leecherCount": 28,
+                        "lastAnnounceSucceeded": true
+                    }
+                ],
+                "files": [
+                    {
+                        "name": "elementaryos-7.1-stable.20231114.iso",
+                        "length": 3006477107,
+                        "bytesCompleted": 2776180598
+                    }
+                ],
+                "labels": [
+                    "linux",
+                    "iso"
+                ],
+                "magnetLink": "magnet:?xt=urn:btih:i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8&dn=elementary+OS+7.1"
+            },
+            {
+                "id": 10,
+                "name": "Kali Linux 2024.4",
+                "status": 2,
+                "hashString": "j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9",
+                "percentDone": 0,
+                "totalSize": 4078764032,
+                "sizeWhenDone": 4078764032,
+                "leftUntilDone": 4078764032,
+                "uploadedEver": 0,
+                "downloadedEver": 0,
+                "uploadRatio": -1,
+                "rateDownload": 0,
+                "rateUpload": 0,
+                "peersConnected": 0,
+                "peersSendingToUs": 0,
+                "peersGettingFromUs": 0,
+                "seeders": -1,
+                "leechers": -1,
+                "eta": -1,
+                "isFinished": false,
+                "isStalled": false,
+                "addedDate": 1735056000,
+                "doneDate": 0,
+                "activityDate": 1735056000,
+                "downloadDir": "/downloads/linux-isos",
+                "error": 0,
+                "errorString": "",
+                "trackerStats": [
+                    {
+                        "host": "tracker.kali.org",
+                        "announceState": 0,
+                        "seederCount": -1,
+                        "leecherCount": -1,
+                        "lastAnnounceSucceeded": false
+                    }
+                ],
+                "files": [
+                    {
+                        "name": "kali-linux-2024.4-installer-amd64.iso",
+                        "length": 4078764032,
+                        "bytesCompleted": 0
+                    }
+                ],
+                "labels": [
+                    "linux",
+                    "iso",
+                    "security"
+                ],
+                "magnetLink": "magnet:?xt=urn:btih:j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9&dn=Kali+Linux+2024.4"
+            },
+            {
+                "id": 11,
+                "name": "Zorin OS 17.1 Pro",
+                "status": 6,
+                "hashString": "k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0",
+                "percentDone": 1,
+                "totalSize": 5368709120,
+                "sizeWhenDone": 5368709120,
+                "leftUntilDone": 0,
+                "uploadedEver": 21474836480,
+                "downloadedEver": 5368709120,
+                "uploadRatio": 4.0,
+                "rateDownload": 0,
+                "rateUpload": 943718,
+                "peersConnected": 19,
+                "peersSendingToUs": 0,
+                "peersGettingFromUs": 7,
+                "seeders": 87,
+                "leechers": 62,
+                "eta": -1,
+                "isFinished": true,
+                "isStalled": false,
+                "addedDate": 1703260800,
+                "doneDate": 1703268000,
+                "activityDate": 1735056000,
+                "downloadDir": "/downloads/linux-isos",
+                "error": 0,
+                "errorString": "",
+                "trackerStats": [
+                    {
+                        "host": "tracker.zorin.com",
+                        "announceState": 1,
+                        "seederCount": 87,
+                        "leecherCount": 62,
+                        "lastAnnounceSucceeded": true
+                    }
+                ],
+                "files": [
+                    {
+                        "name": "Zorin-OS-17.1-Pro-64-bit.iso",
+                        "length": 5368709120,
+                        "bytesCompleted": 5368709120
+                    }
+                ],
+                "labels": [
+                    "linux",
+                    "iso",
+                    "seeding"
+                ],
+                "magnetLink": "magnet:?xt=urn:btih:k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0&dn=Zorin+OS+17.1+Pro"
+            },
+            {
+                "id": 12,
+                "name": "MX Linux 23.3 KDE",
+                "status": 1,
+                "hashString": "l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1",
+                "percentDone": 0.5612,
+                "totalSize": 2415919104,
+                "sizeWhenDone": 2415919104,
+                "leftUntilDone": 1060425166,
+                "uploadedEver": 337428674,
+                "downloadedEver": 1355493938,
+                "uploadRatio": 0.24,
+                "rateDownload": 0,
+                "rateUpload": 0,
+                "peersConnected": 0,
+                "peersSendingToUs": 0,
+                "peersGettingFromUs": 0,
+                "seeders": 56,
+                "leechers": 31,
+                "eta": -1,
+                "isFinished": false,
+                "isStalled": false,
+                "addedDate": 1735041600,
+                "doneDate": 0,
+                "activityDate": 1735045200,
+                "downloadDir": "/downloads/linux-isos",
+                "error": 0,
+                "errorString": "",
+                "trackerStats": [
+                    {
+                        "host": "tracker.mxlinux.org",
+                        "announceState": 1,
+                        "seederCount": 56,
+                        "leecherCount": 31,
+                        "lastAnnounceSucceeded": true
+                    }
+                ],
+                "files": [
+                    {
+                        "name": "MX-23.3_KDE_x64.iso",
+                        "length": 2415919104,
+                        "bytesCompleted": 1355493938
+                    }
+                ],
+                "labels": [
+                    "linux",
+                    "iso",
+                    "stopped"
+                ],
+                "magnetLink": "magnet:?xt=urn:btih:l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1&dn=MX+Linux+23.3+KDE"
+            }
+        ]
+    },
+    "result": "success",
+    "tag": "torrent-list"
+}

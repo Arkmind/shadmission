@@ -1,0 +1,73 @@
+services:
+  gluetun:
+    image: ghcr.io/qdm12/gluetun:latest
+    container_name: gluetun
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+    environment:
+      VPN_SERVICE_PROVIDER: protonvpn
+      VPN_TYPE: openvpn
+      OPENVPN_USER: ${OPENVPN_USER}
+      OPENVPN_PASSWORD: ${OPENVPN_PASSWORD}
+      VPN_PORT_FORWARDING: on
+      SERVER_COUNTRIES: France,Netherlands,Switzerland,Belgium
+      PORT_FORWARD_ONLY: on
+      DOT_PROVIDERS: cloudflare,quad9
+      QTB_USERNAME: arky
+      QTB_PASSWORD: arky
+      HTTPPROXY: off
+      HTTP_CONTROL_SERVER_ADDRESS: :8000
+      VPN_PORT_FORWARDING_UP_COMMAND: |
+        /bin/sh -c '
+          apk add --no-cache transmission-remote >/dev/null 2>&1 || true
+          
+          echo "Waiting for Transmission to be ready..."
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            if transmission-remote localhost:9091 -n "arky:arky" -l >/dev/null 2>&1; then
+              echo "Transmission is ready, setting port {{PORTS}}"
+              transmission-remote localhost:9091 -n "arky:arky" -p {{PORTS}} && \
+              transmission-remote localhost:9091 -n "arky:arky" -t all --reannounce && \
+              echo "Port forwarding configured successfully" && exit 0
+            fi
+            echo "Attempt $i: Transmission not ready, waiting 2s..."
+            sleep 2
+          done
+          echo "Failed to configure port forwarding after 10 attempts"
+          exit 1
+        '
+      TZ: Europe/Paris
+    volumes:
+      - ./gluetun:/gluetun
+    ports:
+      - 8000:8000/tcp
+      - 9091:9091
+
+  transmission:
+    image: linuxserver/transmission
+    container_name: transmission
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      TZ: Europe/Paris
+      USER: arky
+      PASS: arky
+      PUID: 1000
+      PGID: 1000
+      # TRANSMISSION_WEB_HOME: /webui/public
+      WATCH_DIR_ENABLED: "false"
+      INCOMPLETE_DIR_ENABLED: "false"
+    volumes:
+      - transmission_config:/config
+      - ./transmission_ui:/webui:rw
+      - ./downloads:/downloads:rw
+    restart: unless-stopped
+    network_mode: "service:gluetun"
+
+volumes:
+  transmission_config:
