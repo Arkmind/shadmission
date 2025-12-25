@@ -31,7 +31,6 @@ export interface Snapshot {
 
 export interface SnapshotsResponse {
   count: number;
-  seconds: number;
   snapshots: Snapshot[];
 }
 
@@ -39,6 +38,19 @@ export const fetchSnapshots = async (
   seconds: number
 ): Promise<SnapshotsResponse> => {
   const response = await fetch(`${MONITOR_URL}/snapshots?seconds=${seconds}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch snapshots: ${response.statusText}`);
+  }
+  return response.json();
+};
+
+export const fetchSnapshotsByRange = async (
+  from: number,
+  to: number
+): Promise<SnapshotsResponse> => {
+  const response = await fetch(
+    `${MONITOR_URL}/snapshots?from=${from}&to=${to}`
+  );
   if (!response.ok) {
     throw new Error(`Failed to fetch snapshots: ${response.statusText}`);
   }

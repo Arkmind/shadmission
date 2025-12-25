@@ -29,3 +29,14 @@ export const formatEta = (seconds: number): string => {
 export const formatDate = (timestamp: number): string => {
   return new Date(timestamp * 1000).toLocaleDateString();
 };
+
+export const formatTime = (duration: number): string => {
+  const hours = Math.floor(duration / 3600);
+  const minutes = Math.floor((duration % 3600) / 60);
+  const seconds = Math.floor(duration % 60);
+  const parts = [];
+  if (hours > 0) parts.push(`${hours}`);
+  parts.push(`${minutes.toString().padStart(2, "0")}`);
+  parts.push(`${seconds.toString().padStart(2, "0")}`);
+  return parts.join(":");
+};

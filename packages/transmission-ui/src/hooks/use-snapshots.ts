@@ -1,97 +1,100 @@
+import { debounce } from "@/lib/debounce";
 import {
   createSnapshotWebSocket,
   fetchSnapshots,
-  type PeerInfo,
+  fetchSnapshotsByRange,
   type Snapshot,
-  type TorrentDetail,
 } from "@/lib/monitor";
-import { useCallback, useEffect, useRef, useState } from "react";
-
-// Simplified torrent info for graph display (without peer details)
-export interface GraphTorrentDetail {
-  torrent: string;
-  torrent_id: number;
-  upload: number;
-  download: number;
-}
-
-export interface GraphData {
-  date: number;
-  upload: number;
-  download: number;
-  details: GraphTorrentDetail[];
-}
-
-export type { PeerInfo, TorrentDetail };
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface UseSnapshotsOptions {
-  initialSeconds?: number;
+  seconds?: number;
   autoReconnect?: boolean;
   reconnectDelay?: number;
 }
 
-export const useSnapshots = (options: UseSnapshotsOptions = {}) => {
-  const {
-    initialSeconds = 300,
-    autoReconnect = true,
-    reconnectDelay = 3000,
-  } = options;
-
-  const [data, setData] = useState<GraphData[]>([]);
+export const useSnapshots = ({
+  seconds = 300,
+  autoReconnect = true,
+  reconnectDelay = 3000,
+}: UseSnapshotsOptions = {}) => {
+  const [, forceUpdate] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
+  const isLiveRef = useRef(true);
+  const dataRef = useRef<Snapshot[]>([]);
 
-  // Strip peer data to reduce memory usage
-  const snapshotToGraphData = (snapshot: Snapshot): GraphData => ({
-    date: snapshot.timestamp,
-    upload: snapshot.upload ?? 0,
-    download: snapshot.download ?? 0,
-    details: (snapshot.details ?? []).map((d) => ({
-      torrent: d.torrent,
-      torrent_id: d.torrent_id,
-      upload: d.upload,
-      download: d.download,
-    })),
-  });
+  const setData = useCallback(
+    (newData: Snapshot[] | ((prev: Snapshot[]) => Snapshot[])) => {
+      if (typeof newData === "function") {
+        dataRef.current = newData(dataRef.current);
+      } else {
+        dataRef.current = newData;
+      }
+      forceUpdate((n) => n + 1);
+    },
+    []
+  );
 
-  const loadInitialData = useCallback(async (seconds: number) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetchSnapshots(seconds);
-      const graphData = response.snapshots.map(snapshotToGraphData);
-      setData(graphData);
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load snapshots");
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const updateSnapshot = useCallback(
+    async ({
+      from,
+      to,
+      seconds,
+      offset,
+    }: {
+      from?: number;
+      to?: number;
+      seconds?: number;
+      offset?: number;
+    }) => {
+      if (offset !== undefined && offset > 0) {
+        isLiveRef.current = false;
+      } else {
+        isLiveRef.current = true;
+      }
+
+      if (seconds !== undefined) {
+        const snapshots = await fetchSnapshots(seconds);
+        setData(snapshots.snapshots);
+      } else if (from !== undefined && to !== undefined) {
+        const snapshots = await fetchSnapshotsByRange(from, to);
+        setData(snapshots.snapshots);
+      }
+    },
+    [setData]
+  );
+
+  const updateSnapshotDebounced = useMemo(
+    () => debounce(updateSnapshot, 500),
+    []
+  );
 
   const connect = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) return;
+    if (wsRef.current) {
+      return;
+    }
 
-    wsRef.current = createSnapshotWebSocket(
+    const ws = createSnapshotWebSocket(
       (snapshot) => {
-        const graphData = snapshotToGraphData(snapshot);
-        setData((prev) => {
-          // Keep last 24 hours of data
-          const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-          const filtered = prev.filter((d) => d.date > cutoff);
-          return [...filtered, graphData];
+        setData((prevData) => {
+          if (isLiveRef.current) {
+            return [...prevData, snapshot];
+          }
+          return prevData;
         });
+        setIsConnected(true);
+        setError(null);
+      },
+      (err) => {
+        setError(`WebSocket error: ${err.type}`);
       },
       () => {
         setIsConnected(false);
-        setError("WebSocket error");
-      },
-      () => {
-        setIsConnected(false);
+        wsRef.current = null;
         if (autoReconnect) {
           reconnectTimeoutRef.current = window.setTimeout(() => {
             connect();
@@ -100,55 +103,45 @@ export const useSnapshots = (options: UseSnapshotsOptions = {}) => {
       }
     );
 
-    wsRef.current.onopen = () => {
-      setIsConnected(true);
-      setError(null);
-    };
+    wsRef.current = ws;
   }, [autoReconnect, reconnectDelay]);
 
   const disconnect = useCallback(() => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
     if (wsRef.current) {
       wsRef.current.close();
       wsRef.current = null;
     }
-    setIsConnected(false);
-  }, []);
-
-  const loadMoreData = useCallback(async (seconds: number) => {
-    try {
-      const response = await fetchSnapshots(seconds);
-      const graphData = response.snapshots.map(snapshotToGraphData);
-      setData(graphData);
-    } catch (err) {
-      console.error("Failed to load more data:", err);
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
     }
   }, []);
 
   useEffect(() => {
-    const init = async () => {
-      // First fetch historical data via REST API
-      await loadInitialData(initialSeconds);
-      // Then connect to WebSocket for live updates
-      connect();
-    };
+    setIsLoading(true);
+    fetchSnapshots(seconds)
+      .then((response) => {
+        setData(response.snapshots);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        setError(`Failed to fetch snapshots: ${err.message}`);
+        setIsLoading(false);
+      });
 
-    init();
+    connect();
 
     return () => {
       disconnect();
     };
-  }, [initialSeconds]);
+  }, [seconds, connect, disconnect]);
 
   return {
-    data,
+    data: dataRef.current ?? [],
     isConnected,
     isLoading,
     error,
-    loadMoreData,
+    updateSnapshot: updateSnapshotDebounced,
     reconnect: connect,
     disconnect,
   };

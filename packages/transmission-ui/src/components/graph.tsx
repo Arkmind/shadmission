@@ -6,16 +6,9 @@ import {
   ChartTooltip,
   type ChartConfig,
 } from "@/components/ui/chart";
-import type { UseSnapshotsReturn } from "@/hooks/use-snapshots";
-import { formatSpeed } from "@/lib/utils";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type FC,
-} from "react";
+import { useSnapshots, type UseSnapshotsReturn } from "@/hooks/use-snapshots";
+import { formatSpeed, formatTime } from "@/lib/utils";
+import { useEffect, useMemo, useRef, useState, type FC } from "react";
 
 const chartConfig = {
   upload: {
@@ -32,143 +25,65 @@ export interface GraphProps {
   snapshots: UseSnapshotsReturn;
 }
 
-export const Graph: FC<GraphProps> = ({ snapshots }) => {
+export const Graph: FC<GraphProps> = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { data, isConnected, isLoading, error, loadMoreData } = snapshots;
+  const { data, isConnected, isLoading, error, updateSnapshot } =
+    useSnapshots();
 
   // Time range in milliseconds (default 5 minutes)
   const [timeRange, setTimeRange] = useState(300 * 1000);
   // End time offset from now (0 = live, positive = looking at history)
   const [endTimeOffset, setEndTimeOffset] = useState(0);
-  // Locked reference time when panning (prevents graph from shifting with new data)
-  const [lockedTime, setLockedTime] = useState<number | null>(null);
-  // Whether we're in "live" mode (following new data)
-  const isLive = endTimeOffset === 0 && lockedTime === null;
 
-  // Calculate fixed domain for X-axis to prevent wobbling
-  const xDomain = useMemo(() => {
-    if (data.length === 0) return [Date.now() - timeRange, Date.now()];
-
-    const referenceTime = lockedTime ?? data[data.length - 1].date;
-    const endTime = referenceTime - endTimeOffset;
-    const startTime = endTime - timeRange;
-
-    return [startTime, endTime];
-  }, [data, timeRange, endTimeOffset, lockedTime]);
-
-  // Filter data based on time range and offset
-  const filteredData = useMemo(() => {
-    if (data.length === 0) return [];
-
-    const [startTime, endTime] = xDomain;
-
-    return data.filter(
-      (item) => item.date >= startTime && item.date <= endTime
-    );
-  }, [data, xDomain]);
-
-  // Load more data when zooming out or scrolling back
-  const loadMoreDataRef = useRef(loadMoreData);
-  loadMoreDataRef.current = loadMoreData;
-  const dataRef = useRef(data);
-  dataRef.current = data;
+  const isLive = useMemo(() => endTimeOffset === 0, [endTimeOffset]);
 
   useEffect(() => {
-    const currentData = dataRef.current;
-    const requiredSeconds = Math.ceil((timeRange + endTimeOffset) / 1000);
-    const currentDataSpan =
-      currentData.length > 0 ? (Date.now() - currentData[0].date) / 1000 : 0;
+    const handleShiftScroll = (event: WheelEvent) => {
+      if (!event.shiftKey) return;
+      event.preventDefault();
+      const delta = event.deltaY;
+      setEndTimeOffset((prev) => Math.max(0, prev + delta * 100));
+    };
 
-    if (requiredSeconds > currentDataSpan + 60) {
-      loadMoreDataRef.current(Math.min(requiredSeconds + 120, 86400)); // Load extra buffer, max 24h
-    }
-  }, [timeRange, endTimeOffset]);
+    const handleNormalScroll = (event: WheelEvent) => {
+      if (event.shiftKey) return;
+      event.preventDefault();
+      const delta = event.deltaY;
+      setTimeRange((prev) => Math.max(60 * 1000, prev + delta * 100));
+    };
 
-  const handleScroll = useCallback(
-    (e: WheelEvent) => {
-      e.preventDefault();
-      const delta = e.deltaY;
+    const handleDoubleClick = () => {
+      setEndTimeOffset(0);
+    };
 
-      if (e.shiftKey) {
-        // Lock the time on first pan if not already locked
-        if (lockedTime === null && data.length > 0) {
-          setLockedTime(data[data.length - 1].date);
-        }
+    const handleScroll = (event: WheelEvent) => {
+      handleShiftScroll(event);
+      handleNormalScroll(event);
+    };
 
-        // Shift + scroll: Pan through time (change end time offset)
-        setEndTimeOffset((prev) => {
-          const newOffset = prev + delta * 100; // 100ms per scroll unit
-          if (newOffset < 0) {
-            // Return to live mode when scrolling back to present
-            setLockedTime(null);
-            return 0;
-          }
-
-          // Allow panning up to 24 hours back (will trigger data load if needed)
-          const maxOffset = 24 * 60 * 60 * 1000; // 24 hours in ms
-          return Math.min(newOffset, maxOffset);
-        });
-      } else {
-        // Normal scroll: Zoom (change time range)
-        setTimeRange((prev) => {
-          const zoomFactor = delta > 0 ? 1.1 : 0.9;
-          let newRange = prev * zoomFactor;
-
-          // Clamp between 30 seconds and 24 hours
-          newRange = Math.max(30_000, Math.min(86_400_000, newRange));
-          return newRange;
-        });
-      }
-    },
-    [data, lockedTime]
-  );
-
-  useEffect(() => {
     const container = containerRef.current;
     if (container) {
-      container.addEventListener("wheel", handleScroll, { passive: false });
+      container.addEventListener("wheel", handleScroll, {
+        passive: false,
+      });
+      container.addEventListener("dblclick", handleDoubleClick);
     }
 
     return () => {
       if (container) {
         container.removeEventListener("wheel", handleScroll);
+        container.removeEventListener("dblclick", handleDoubleClick);
       }
     };
-  }, [handleScroll]);
+  });
 
-  // Double-click to return to live mode
-  const handleDoubleClick = useCallback(() => {
-    setEndTimeOffset(0);
-    setLockedTime(null);
-  }, []);
-
-  const statusText = useMemo(() => {
-    const rangeSeconds = Math.round(timeRange / 1000);
-    let rangeText: string;
-
-    if (rangeSeconds >= 3600) {
-      rangeText = `${(rangeSeconds / 3600).toFixed(1)}h`;
-    } else if (rangeSeconds >= 60) {
-      rangeText = `${Math.round(rangeSeconds / 60)}m`;
-    } else {
-      rangeText = `${rangeSeconds}s`;
-    }
-
-    if (!isLive) {
-      const offsetSeconds = Math.round(endTimeOffset / 1000);
-      let offsetText: string;
-
-      if (offsetSeconds >= 3600) {
-        offsetText = `${(offsetSeconds / 3600).toFixed(1)}h ago`;
-      } else if (offsetSeconds >= 60) {
-        offsetText = `${Math.round(offsetSeconds / 60)}m ago`;
-      } else {
-        offsetText = `${offsetSeconds}s ago`;
-      }
-      return `${rangeText} window • ${offsetText}`;
-    }
-    return `${rangeText} • Live`;
-  }, [timeRange, endTimeOffset, isLive]);
+  useEffect(() => {
+    updateSnapshot({
+      from: Date.now() - timeRange - endTimeOffset,
+      to: Date.now() - endTimeOffset,
+      offset: endTimeOffset,
+    });
+  }, [timeRange, endTimeOffset]);
 
   if (isLoading && data.length === 0) {
     return (
@@ -198,10 +113,14 @@ export const Graph: FC<GraphProps> = ({ snapshots }) => {
             isConnected ? "bg-green-500" : "bg-red-500"
           }`}
         />
-        <span>{statusText}</span>
+        <span>
+          {formatTime(timeRange / 1000)}
+          <span className="text-muted-foreground/50 mx-1">•</span>
+          {isLive ? "Live" : formatTime(endTimeOffset / 1000)}
+        </span>
         {!isLive && (
           <button
-            onClick={handleDoubleClick}
+            onClick={() => setEndTimeOffset(0)}
             className="text-xs underline hover:text-foreground"
           >
             Back to live
@@ -212,9 +131,14 @@ export const Graph: FC<GraphProps> = ({ snapshots }) => {
       <ChartContainer
         config={chartConfig}
         className="min-h-52 h-full w-full pb-4"
-        onDoubleClick={handleDoubleClick}
       >
-        <AreaChart data={filteredData}>
+        <AreaChart
+          data={data.map((snapshot) => ({
+            date: snapshot.timestamp,
+            upload: snapshot.upload,
+            download: snapshot.download,
+          }))}
+        >
           <defs>
             <linearGradient id="fillUpload" x1="0" y1="0" x2="0" y2="1">
               <stop
@@ -245,19 +169,19 @@ export const Graph: FC<GraphProps> = ({ snapshots }) => {
           <XAxis
             dataKey="date"
             type="number"
-            domain={xDomain}
+            domain={["dataMin", "dataMax"]}
             tickLine={false}
             axisLine={false}
             tickMargin={8}
             minTickGap={32}
-            tickFormatter={(value) =>
-              new Date(value).toLocaleTimeString(navigator.language, {
+            tickFormatter={(value) => {
+              return new Date(value).toLocaleTimeString(navigator.language, {
                 hour: "numeric",
                 minute: "numeric",
                 second: "numeric",
                 hour12: false,
-              })
-            }
+              });
+            }}
           />
           <YAxis
             tickLine={false}
