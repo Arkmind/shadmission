@@ -99,7 +99,7 @@ export const Dashboard: React.FC = () => {
           torrent ? "xl:row-span-3" : "xl:row-span-full"
         )}
       >
-        <Card className="rounded-xl p-2">
+        <Card className="rounded-xl p-1">
           <CardContent className="p-0">
             <TorrentListFilter
               selectedTorrents={selectedTorrents}
