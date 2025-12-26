@@ -67,16 +67,18 @@ export const Dashboard: React.FC = () => {
   );
 
   return (
-    <div className="grid grid-cols-4 grid-rows-6 gap-3 h-full">
-      {/* Graph */}
-      <Card className="rounded-xl col-span-1 row-span-2 py-4 px-0">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 auto-rows-min xl:grid-rows-6 gap-3 h-full">
+      {/* Graph & Live Transfer */}
+      <Card className="rounded-xl xl:row-span-2 py-4 px-0">
         <CardContent className="h-full flex flex-col space-y-4 px-1">
           <LiveTransfer />
           <Graph />
         </CardContent>
       </Card>
-      <div className="col-span-1 row-span-4 row-start-3 flex flex-col space-y-3">
-        <Card className="rounded-xl flex-1 py-0 overflow-hidden">
+
+      {/* Session Status & Gluetun */}
+      <div className="xl:row-span-4 xl:row-start-3 flex flex-col space-y-3">
+        <Card className="rounded-xl flex-1 py-0 overflow-hidden min-h-50">
           <CardContent className="h-full p-0">
             <SessionStatus torrents={data?.torrents} />
           </CardContent>
@@ -93,8 +95,8 @@ export const Dashboard: React.FC = () => {
       {/* Torrent list */}
       <div
         className={cn(
-          "col-span-3 py-0 flex flex-col space-y-2",
-          torrent ? "row-span-3" : "row-span-full"
+          "md:col-span-2 xl:col-span-3 py-0 flex flex-col space-y-2 min-h-75 xl:min-h-0",
+          torrent ? "xl:row-span-3" : "xl:row-span-full"
         )}
       >
         <Card className="rounded-xl p-2">
@@ -109,7 +111,7 @@ export const Dashboard: React.FC = () => {
             />
           </CardContent>
         </Card>
-        <Card className="rounded-xl flex-1 py-0">
+        <Card className="rounded-xl flex-1 py-0 min-h-62.5 xl:min-h-0">
           <CardContent className="h-full p-0">
             <TorrentList
               onClick={handleClick}
@@ -122,9 +124,10 @@ export const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
       {/* Data from selected torrent */}
       {torrent && (
-        <Card className="rounded-xl col-span-3 row-span-3 py-0">
+        <Card className="rounded-xl md:col-span-2 xl:col-span-3 xl:row-span-3 py-0 min-h-75 xl:min-h-0">
           <CardContent className="h-full p-0">
             <TorrentInfo torrent={torrent} />
           </CardContent>

@@ -188,7 +188,7 @@ export const SessionStatus: FC<SessionStatusProps> = ({ torrents = [] }) => {
                           <p className="font-medium truncate" title={t.name}>
                             {t.name}
                           </p>
-                          <p className="text-destructive/80 break-words">
+                          <p className="text-destructive/80 wrap-break-word">
                             {t.errorString}
                           </p>
                         </div>

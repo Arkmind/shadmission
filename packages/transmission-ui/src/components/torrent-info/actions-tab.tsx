@@ -110,10 +110,9 @@ export const ActionsTab: FC<TorrentTabProps> = memo(
       });
     }, [raw]);
 
-    // Fetch additional fields only when torrent ID changes (not on every poll)
     useEffect(() => {
       fetchAdditionalFields();
-    }, [torrentId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [torrentId]);
 
     const handleSaveSettings = async () => {
       if (!torrentId) return;
