@@ -15,6 +15,12 @@ export const Dashboard: React.FC = () => {
     setTorrent(torrent);
   };
 
+  const handleUpdate = (torrent: NormalizedTorrent) => {
+    if (!torrent) return;
+    if (torrent.id !== torrent.id) return;
+    setTorrent(torrent);
+  };
+
   return (
     <div className="grid grid-cols-4 grid-rows-5 gap-3 h-full">
       {/* Graph */}
@@ -34,7 +40,7 @@ export const Dashboard: React.FC = () => {
           torrent ? "row-span-3" : "row-span-full"
         )}
       >
-        <TorrentList onClick={handleClick} />
+        <TorrentList onClick={handleClick} onUpdate={handleUpdate} />
       </Card>
       {/* Data from selected torrent */}
       {torrent && (

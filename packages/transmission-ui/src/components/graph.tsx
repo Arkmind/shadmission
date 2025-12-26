@@ -23,8 +23,10 @@ const chartConfig = {
 
 export const Graph: FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { data, isConnected, isLoading, error, updateSnapshot } =
-    useSnapshots();
+  const [bufferSize, setBufferSize] = useState<number | undefined>(undefined);
+  const { data, isConnected, isLoading, error, updateSnapshot } = useSnapshots({
+    bufferSize,
+  });
 
   // Time range in milliseconds (default 5 minutes)
   const [timeRange, setTimeRange] = useState(300 * 1000);
@@ -74,6 +76,14 @@ export const Graph: FC = () => {
   });
 
   useEffect(() => {
+    setBufferSize(
+      Math.abs(
+        Date.now() - endTimeOffset - Date.now() - timeRange - endTimeOffset
+      ) /
+        1000 +
+        5
+    );
+
     updateSnapshot({
       from: Date.now() - timeRange - endTimeOffset,
       to: Date.now() - endTimeOffset,

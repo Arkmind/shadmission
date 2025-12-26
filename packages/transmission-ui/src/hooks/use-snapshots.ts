@@ -18,7 +18,7 @@ export const useSnapshots = ({
   seconds = 300,
   autoReconnect = true,
   reconnectDelay = 3000,
-  bufferSize = 1000,
+  bufferSize = 300,
 }: UseSnapshotsOptions = {}) => {
   const [, forceUpdate] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
@@ -29,6 +29,8 @@ export const useSnapshots = ({
   const isLiveRef = useRef(true);
   const dataRef = useRef<Snapshot[]>([]);
   const connectRef = useRef<() => void>(null);
+  const bufferSizeRef = useRef(bufferSize);
+  bufferSizeRef.current = bufferSize;
 
   const setData = useCallback(
     (newData: Snapshot[] | ((prev: Snapshot[]) => Snapshot[])) => {
@@ -85,7 +87,7 @@ export const useSnapshots = ({
       (snapshot) => {
         setData((prevData) => {
           if (isLiveRef.current) {
-            if (prevData.length >= bufferSize) {
+            if (prevData.length >= bufferSizeRef.current) {
               return [...prevData.slice(1), snapshot];
             }
             return [...prevData, snapshot];
@@ -110,7 +112,7 @@ export const useSnapshots = ({
     );
 
     wsRef.current = ws;
-  }, [autoReconnect, reconnectDelay]);
+  }, [autoReconnect, reconnectDelay, setData]);
 
   connectRef.current = connect;
 

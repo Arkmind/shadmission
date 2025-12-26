@@ -6,12 +6,43 @@ import {
 } from "@ctrl/shared-torrent";
 import { type ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
-import { useEffect, useRef, useState, type FC } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FC,
+} from "react";
+import { TorrentAction } from "./torrent-action";
 import { ButtonTable } from "./ui/button-table";
 import { DataTable } from "./ui/data-table";
 import { Progress } from "./ui/progress";
 
-const columns: ColumnDef<NormalizedTorrent>[] = [
+// Get row class based on torrent state
+const getRowClassName = (torrent: NormalizedTorrent): string => {
+  if (torrent.state === "error") {
+    return "bg-red-500/10 hover:bg-red-500/20";
+  }
+  if (torrent.state === "paused") {
+    return "bg-muted/50 hover:bg-muted/70 text-muted-foreground";
+  }
+  if (torrent.state === "seeding" && torrent.uploadSpeed > 0) {
+    return "bg-blue-500/10 hover:bg-blue-500/20";
+  }
+  if (torrent.state === "downloading" && torrent.downloadSpeed > 0) {
+    return "bg-green-500/10 hover:bg-green-500/20";
+  }
+  if (torrent.state === "queued") {
+    return "bg-muted/30 hover:bg-muted/50";
+  }
+
+  return "";
+};
+
+const createColumns = (
+  onUpdate?: () => void
+): ColumnDef<NormalizedTorrent>[] => [
   {
     accessorKey: "name",
     header: ({ column }) => (
@@ -144,18 +175,32 @@ const columns: ColumnDef<NormalizedTorrent>[] = [
       return date.toLocaleDateString();
     },
   },
+  {
+    accessorKey: "actions",
+    header: "",
+    cell: ({ row }) => (
+      <TorrentAction torrent={row.original} onUpdate={onUpdate} />
+    ),
+    enableSorting: false,
+    size: 50,
+  },
 ];
 
 export interface TorrentListProps {
   onClick?: (torrent: NormalizedTorrent | null) => void;
+  onUpdate?: (torrent: NormalizedTorrent) => void;
 }
 
-export const TorrentList: FC<TorrentListProps> = ({ onClick }) => {
+export const TorrentList: FC<TorrentListProps> = ({ onClick, onUpdate }) => {
   const [data, setData] = useState<AllClientData | null>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(
-    setTimeout(() => {})
-  );
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clickedTorrentRef = useRef<NormalizedTorrent | null>(null);
+  const isMountedRef = useRef(true);
+  const getAllDataRef = useRef<(() => Promise<void>) | null>(null);
+  const onUpdateRef = useRef(onUpdate);
+
+  // Keep refs in sync
+  onUpdateRef.current = onUpdate;
 
   const handleClick = (torrent: NormalizedTorrent) => {
     if (clickedTorrentRef.current?.id === torrent.id) {
@@ -168,30 +213,53 @@ export const TorrentList: FC<TorrentListProps> = ({ onClick }) => {
     onClick?.(torrent);
   };
 
-  const getAllData = async () => {
-    const list = await client.getAllData();
-    setData(list);
+  const getAllData = useCallback(async () => {
+    // Prevent fetching if unmounted
+    if (!isMountedRef.current) return;
 
-    if (clickedTorrentRef.current) {
-      const updatedTorrent = list.torrents.find(
-        (t) => t.id === clickedTorrentRef.current?.id
-      );
-      if (updatedTorrent) {
-        clickedTorrentRef.current = updatedTorrent;
-        onClick?.(updatedTorrent);
+    try {
+      const list = await client.getAllData();
+
+      // Check again after async operation
+      if (!isMountedRef.current) return;
+
+      setData(list);
+
+      if (clickedTorrentRef.current) {
+        const updatedTorrent = list.torrents.find(
+          (t) => t.id === clickedTorrentRef.current?.id
+        );
+        if (updatedTorrent) {
+          onUpdateRef.current?.(updatedTorrent);
+        }
       }
+    } catch (error) {
+      console.error("Failed to fetch torrent data:", error);
     }
 
-    timeoutRef.current = setTimeout(getAllData, 1000);
-  };
+    // Schedule next fetch only if still mounted
+    if (isMountedRef.current) {
+      timeoutRef.current = setTimeout(() => getAllDataRef.current?.(), 1000);
+    }
+  }, []);
+
+  // Keep ref in sync with latest getAllData
+  getAllDataRef.current = getAllData;
+
+  // Memoize columns to prevent unnecessary re-renders
+  const columns = useMemo(() => createColumns(getAllData), [getAllData]);
 
   useEffect(() => {
+    isMountedRef.current = true;
     getAllData();
 
     return () => {
-      clearTimeout(timeoutRef.current);
+      isMountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
-  }, []);
+  }, [getAllData]);
 
   return (
     <DataTable
@@ -201,6 +269,7 @@ export const TorrentList: FC<TorrentListProps> = ({ onClick }) => {
       enableSorting
       enableRowSelection
       onClickRow={handleClick}
+      rowClassName={getRowClassName}
     />
   );
 };

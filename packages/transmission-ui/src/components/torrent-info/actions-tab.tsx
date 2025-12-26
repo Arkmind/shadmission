@@ -108,9 +108,12 @@ export const ActionsTab: FC<TorrentTabProps> = memo(
         seedRatioMode: raw?.seedRatioMode || 0,
         seedRatioLimit: raw?.seedRatioLimit || 2,
       });
-      // Fetch uploadLimit/uploadLimited which aren't in the default fields
+    }, [raw]);
+
+    // Fetch additional fields only when torrent ID changes (not on every poll)
+    useEffect(() => {
       fetchAdditionalFields();
-    }, [raw, fetchAdditionalFields]);
+    }, [torrentId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleSaveSettings = async () => {
       if (!torrentId) return;

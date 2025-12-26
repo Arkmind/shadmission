@@ -61,6 +61,8 @@ interface DataTableProps<TData, TValue> {
   // Selection callback
   onRowSelectionChange?: (selectedRows: TData[]) => void;
   onClickRow?: (row: TData) => void;
+  // Custom row styling
+  rowClassName?: (row: TData) => string;
 }
 
 export function DataTable<TData, TValue>({
@@ -79,6 +81,7 @@ export function DataTable<TData, TValue>({
   actions = [],
   onRowSelectionChange,
   onClickRow,
+  rowClassName,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -110,6 +113,7 @@ export function DataTable<TData, TValue>({
         ),
         cell: ({ row }) => (
           <Checkbox
+            onClick={(e) => e.stopPropagation()}
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
             aria-label="Select row"
@@ -282,6 +286,7 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   onClick={() => onClickRow?.(row.original)}
+                  className={rowClassName?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
