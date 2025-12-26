@@ -1,7 +1,19 @@
-import { client } from "@/lib/transmission";
+import {
+  fetchAllLabels,
+  fetchTorrentLabels,
+  reannounceTorrents,
+  removeTorrents,
+  setTorrentsLabels,
+  setTorrentsPriority,
+  startTorrents,
+  startTorrentsNow,
+  stopTorrents,
+  verifyTorrents,
+} from "@/lib/torrent-actions";
 import type { NormalizedTorrent } from "@ctrl/shared-torrent";
 import {
   CheckCircle,
+  ChevronDown,
   Ellipsis,
   Loader2,
   Play,
@@ -13,7 +25,6 @@ import {
   X,
 } from "lucide-react";
 import { type FC, useState } from "react";
-import { toast } from "sonner";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
@@ -29,6 +40,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -38,21 +50,34 @@ import {
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
-export interface TorrentActionProps {
-  torrent: NormalizedTorrent;
-  onUpdate?: () => void;
-}
-
 interface RawTorrentData {
   id: number;
   labels?: string[];
   bandwidthPriority?: number;
 }
 
+export interface TorrentActionProps {
+  /** Single torrent or array of torrents to act on */
+  torrents: NormalizedTorrent | NormalizedTorrent[];
+  /** Callback after any action completes */
+  onUpdate?: () => void;
+  /** Render as inline button (for bulk actions) vs icon button (for single row) */
+  variant?: "icon" | "button";
+  /** Custom trigger element */
+  trigger?: React.ReactNode;
+}
+
 export const TorrentAction: FC<TorrentActionProps> = ({
-  torrent,
+  torrents: torrentsProp,
   onUpdate,
+  variant = "icon",
+  trigger,
 }) => {
+  // Normalize to array
+  const torrents = Array.isArray(torrentsProp) ? torrentsProp : [torrentsProp];
+  const isBulk = torrents.length > 1;
+  const singleTorrent = torrents.length === 1 ? torrents[0] : null;
+
   const [isOpen, setIsOpen] = useState(false);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [labelsDialogOpen, setLabelsDialogOpen] = useState(false);
@@ -65,195 +90,77 @@ export const TorrentAction: FC<TorrentActionProps> = ({
   const [newLabel, setNewLabel] = useState("");
   const [allLabels, setAllLabels] = useState<string[]>([]);
 
-  const raw = torrent.raw as RawTorrentData | undefined;
-  const torrentId = raw?.id;
+  // Get current priority (only meaningful for single torrent)
+  const raw = singleTorrent?.raw as RawTorrentData | undefined;
+  const currentPriority = raw?.bandwidthPriority ?? 0;
 
   const handleStart = async () => {
-    if (!torrentId) return;
     setLoadingAction("start");
-    try {
-      await client.resumeTorrent(torrentId);
-      toast.success("Torrent started", {
-        description: `${torrent.name} has been started.`,
-      });
-      onUpdate?.();
-    } catch (error) {
-      console.error("Failed to start torrent:", error);
-      toast.error("Failed to start torrent", {
-        description:
-          error instanceof Error ? error.message : "An unknown error occurred",
-      });
-    } finally {
-      setLoadingAction(null);
-      setIsOpen(false);
-    }
+    await startTorrents(torrents, onUpdate);
+    setLoadingAction(null);
+    setIsOpen(false);
   };
 
   const handleStartNow = async () => {
-    if (!torrentId) return;
     setLoadingAction("startNow");
-    try {
-      // Start now bypasses the queue
-      await client.request("torrent-start-now", { ids: [torrentId] });
-      toast.success("Torrent started immediately", {
-        description: `${torrent.name} has been started (bypassing queue).`,
-      });
-      onUpdate?.();
-    } catch (error) {
-      console.error("Failed to start torrent now:", error);
-      toast.error("Failed to start torrent", {
-        description:
-          error instanceof Error ? error.message : "An unknown error occurred",
-      });
-    } finally {
-      setLoadingAction(null);
-      setIsOpen(false);
-    }
+    await startTorrentsNow(torrents, onUpdate);
+    setLoadingAction(null);
+    setIsOpen(false);
   };
 
   const handleStop = async () => {
-    if (!torrentId) return;
     setLoadingAction("stop");
-    try {
-      await client.pauseTorrent(torrentId);
-      toast.success("Torrent stopped", {
-        description: `${torrent.name} has been stopped.`,
-      });
-      onUpdate?.();
-    } catch (error) {
-      console.error("Failed to stop torrent:", error);
-      toast.error("Failed to stop torrent", {
-        description:
-          error instanceof Error ? error.message : "An unknown error occurred",
-      });
-    } finally {
-      setLoadingAction(null);
-      setIsOpen(false);
-    }
+    await stopTorrents(torrents, onUpdate);
+    setLoadingAction(null);
+    setIsOpen(false);
   };
 
   const handleRemove = async () => {
-    if (!torrentId) return;
     setIsLoading(true);
-    try {
-      await client.removeTorrent(torrentId, deleteData);
-      toast.success("Torrent removed", {
-        description: deleteData
-          ? `${torrent.name} and its data have been deleted.`
-          : `${torrent.name} has been removed (data kept).`,
-      });
-      onUpdate?.();
+    const success = await removeTorrents(torrents, deleteData, onUpdate);
+    setIsLoading(false);
+    if (success) {
       setRemoveDialogOpen(false);
-    } catch (error) {
-      console.error("Failed to remove torrent:", error);
-      toast.error("Failed to remove torrent", {
-        description:
-          error instanceof Error ? error.message : "An unknown error occurred",
-      });
-    } finally {
-      setIsLoading(false);
-      setIsOpen(false);
     }
+    setIsOpen(false);
   };
 
   const handleVerify = async () => {
-    if (!torrentId) return;
     setLoadingAction("verify");
-    try {
-      await client.verifyTorrent(torrentId);
-      toast.success("Verification started", {
-        description: `${torrent.name} is being verified.`,
-      });
-      onUpdate?.();
-    } catch (error) {
-      console.error("Failed to verify torrent:", error);
-      toast.error("Failed to verify torrent", {
-        description:
-          error instanceof Error ? error.message : "An unknown error occurred",
-      });
-    } finally {
-      setLoadingAction(null);
-      setIsOpen(false);
-    }
+    await verifyTorrents(torrents, onUpdate);
+    setLoadingAction(null);
+    setIsOpen(false);
   };
 
   const handleReannounce = async () => {
-    if (!torrentId) return;
     setLoadingAction("reannounce");
-    try {
-      await client.reannounceTorrent(torrentId);
-      toast.success("Tracker reannounced", {
-        description: `Asked tracker for more peers for ${torrent.name}.`,
-      });
-      onUpdate?.();
-    } catch (error) {
-      console.error("Failed to reannounce torrent:", error);
-      toast.error("Failed to reannounce", {
-        description:
-          error instanceof Error ? error.message : "An unknown error occurred",
-      });
-    } finally {
-      setLoadingAction(null);
-      setIsOpen(false);
-    }
+    await reannounceTorrents(torrents, onUpdate);
+    setLoadingAction(null);
+    setIsOpen(false);
   };
 
   const handlePriorityChange = async (priority: number) => {
-    if (!torrentId) return;
     setLoadingAction(`priority-${priority}`);
-    try {
-      await client.setTorrent(torrentId, { bandwidthPriority: priority });
-      const priorityNames = { [-1]: "Low", 0: "Normal", 1: "High" };
-      toast.success("Priority changed", {
-        description: `${torrent.name} priority set to ${
-          priorityNames[priority as keyof typeof priorityNames]
-        }.`,
-      });
-      onUpdate?.();
-    } catch (error) {
-      console.error("Failed to change priority:", error);
-      toast.error("Failed to change priority", {
-        description:
-          error instanceof Error ? error.message : "An unknown error occurred",
-      });
-    } finally {
-      setLoadingAction(null);
-      setIsOpen(false);
-    }
+    await setTorrentsPriority(torrents, priority, onUpdate);
+    setLoadingAction(null);
+    setIsOpen(false);
   };
 
   const openLabelsDialog = async () => {
-    if (!torrentId) return;
     setLabelsDialogOpen(true);
     setIsOpen(false);
 
-    try {
-      // Get current torrent labels
-      const result = await client.listTorrents(torrentId, ["labels"]);
-      const torrentData = result.arguments.torrents[0] as
-        | { labels?: string[] }
-        | undefined;
-      setCurrentLabels(torrentData?.labels || []);
-
-      // Get all labels from all torrents
-      const allTorrents = await client.listTorrents(undefined, ["labels"]);
-      const labelsSet = new Set<string>();
-      for (const t of allTorrents.arguments.torrents) {
-        const tData = t as { labels?: string[] };
-        if (tData.labels) {
-          for (const label of tData.labels) {
-            labelsSet.add(label);
-          }
-        }
-      }
-      setAllLabels(Array.from(labelsSet).sort());
-    } catch (error) {
-      console.error("Failed to fetch labels:", error);
-      toast.error("Failed to fetch labels", {
-        description:
-          error instanceof Error ? error.message : "An unknown error occurred",
-      });
+    // Fetch labels
+    if (singleTorrent) {
+      const labels = await fetchTorrentLabels(singleTorrent);
+      setCurrentLabels(labels);
+    } else {
+      // For bulk, start with empty labels
+      setCurrentLabels([]);
     }
+
+    const all = await fetchAllLabels();
+    setAllLabels(all);
   };
 
   const handleAddLabel = () => {
@@ -280,44 +187,52 @@ export const TorrentAction: FC<TorrentActionProps> = ({
   };
 
   const handleSaveLabels = async () => {
-    if (!torrentId) return;
     setIsLoading(true);
-    try {
-      await client.setTorrent(torrentId, { labels: currentLabels });
-      toast.success("Labels updated", {
-        description:
-          currentLabels.length > 0
-            ? `Labels set to: ${currentLabels.join(", ")}`
-            : "All labels removed.",
-      });
-      onUpdate?.();
+    const success = await setTorrentsLabels(torrents, currentLabels, onUpdate);
+    setIsLoading(false);
+    if (success) {
       setLabelsDialogOpen(false);
-    } catch (error) {
-      console.error("Failed to update labels:", error);
-      toast.error("Failed to update labels", {
-        description:
-          error instanceof Error ? error.message : "An unknown error occurred",
-      });
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const currentPriority = raw?.bandwidthPriority ?? 0;
+  const getDisplayName = () => {
+    if (isBulk) {
+      return `${torrents.length} torrent(s)`;
+    }
+    return singleTorrent?.name || "torrent";
+  };
+
+  const renderTrigger = () => {
+    if (trigger) return trigger;
+
+    if (variant === "button") {
+      return (
+        <Button variant="default" size="sm" className="h-8">
+          Actions
+          <ChevronDown className="ml-1 h-3 w-3" />
+        </Button>
+      );
+    }
+
+    return (
+      <Button size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
+        <Ellipsis />
+      </Button>
+    );
+  };
 
   return (
     <>
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Ellipsis />
-          </Button>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger asChild>{renderTrigger()}</DropdownMenuTrigger>
         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+          {isBulk && (
+            <>
+              <DropdownMenuLabel>Bulk Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+            </>
+          )}
+
           {/* Start submenu */}
           <DropdownMenuSub>
             <DropdownMenuSubTrigger
@@ -407,22 +322,32 @@ export const TorrentAction: FC<TorrentActionProps> = ({
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem onClick={openLabelsDialog}>
-            <Tags className="mr-2 h-4 w-4" />
-            Change labels
-          </DropdownMenuItem>
+          {/* Labels only for single torrent - bulk label management is complex */}
+          {!isBulk && (
+            <>
+              <DropdownMenuItem onClick={openLabelsDialog}>
+                <Tags className="mr-2 h-4 w-4" />
+                Change labels
+              </DropdownMenuItem>
 
-          <DropdownMenuSeparator />
+              <DropdownMenuSeparator />
+            </>
+          )}
 
           {/* Priority submenu */}
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
-              Priority:{" "}
-              {currentPriority === -1
-                ? "Low"
-                : currentPriority === 1
-                ? "High"
-                : "Normal"}
+              {!isBulk && (
+                <>
+                  Priority:{" "}
+                  {currentPriority === -1
+                    ? "Low"
+                    : currentPriority === 1
+                    ? "High"
+                    : "Normal"}
+                </>
+              )}
+              {isBulk && "Set Priority"}
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuItem
@@ -432,7 +357,7 @@ export const TorrentAction: FC<TorrentActionProps> = ({
                 {loadingAction === "priority--1" && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {currentPriority === -1 && "✓ "}Low
+                {!isBulk && currentPriority === -1 && "✓ "}Low
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => handlePriorityChange(0)}
@@ -441,7 +366,7 @@ export const TorrentAction: FC<TorrentActionProps> = ({
                 {loadingAction === "priority-0" && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {currentPriority === 0 && "✓ "}Normal
+                {!isBulk && currentPriority === 0 && "✓ "}Normal
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => handlePriorityChange(1)}
@@ -450,7 +375,7 @@ export const TorrentAction: FC<TorrentActionProps> = ({
                 {loadingAction === "priority-1" && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {currentPriority === 1 && "✓ "}High
+                {!isBulk && currentPriority === 1 && "✓ "}High
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
@@ -461,9 +386,11 @@ export const TorrentAction: FC<TorrentActionProps> = ({
       <Dialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen}>
         <DialogContent onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
-            <DialogTitle>Remove Torrent</DialogTitle>
+            <DialogTitle>
+              Remove {isBulk ? `${torrents.length} Torrent(s)` : "Torrent"}
+            </DialogTitle>
             <DialogDescription>
-              Are you sure you want to remove "{torrent.name}"?
+              Are you sure you want to remove {getDisplayName()}?
             </DialogDescription>
           </DialogHeader>
 
@@ -523,14 +450,16 @@ export const TorrentAction: FC<TorrentActionProps> = ({
           <DialogHeader>
             <DialogTitle>Manage Labels</DialogTitle>
             <DialogDescription>
-              Add, remove, or create labels for "{torrent.name}"
+              {isBulk
+                ? `Set labels for ${torrents.length} selected torrent(s)`
+                : `Add, remove, or create labels for "${singleTorrent?.name}"`}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             {/* Current labels */}
             <div className="space-y-2">
-              <Label>Current Labels</Label>
+              <Label>{isBulk ? "Labels to Set" : "Current Labels"}</Label>
               <div className="flex flex-wrap gap-2 min-h-8">
                 {currentLabels.length > 0 ? (
                   currentLabels.map((label) => (
@@ -550,7 +479,7 @@ export const TorrentAction: FC<TorrentActionProps> = ({
                   ))
                 ) : (
                   <span className="text-sm text-muted-foreground">
-                    No labels assigned
+                    No labels {isBulk ? "selected" : "assigned"}
                   </span>
                 )}
               </div>

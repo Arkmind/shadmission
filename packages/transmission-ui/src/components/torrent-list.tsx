@@ -24,6 +24,9 @@ const getRowClassName = (torrent: NormalizedTorrent): string => {
   if (torrent.state === "error") {
     return "bg-red-500/10 hover:bg-red-500/20";
   }
+  if (torrent.state === "checking") {
+    return "bg-purple-500/10 hover:bg-purple-500/20";
+  }
   if (torrent.state === "paused") {
     return "bg-muted/50 hover:bg-muted/70 text-muted-foreground";
   }
@@ -66,6 +69,25 @@ const createColumns = (
     ),
     cell: ({ row }) => {
       const progress = row.getValue<number>("progress") * 100;
+      const isChecking = row.original.state === "checking";
+
+      if (isChecking) {
+        const recheckProgress =
+          ((row.original as unknown as { recheckProgress: number })
+            .recheckProgress ?? 0) * 100;
+        return (
+          <div className="flex items-center gap-2 min-w-50">
+            <span className="text-xs text-purple-500 text-right animate-pulse">
+              {recheckProgress.toFixed(1)}%
+            </span>
+            <Progress
+              value={recheckProgress}
+              className="flex-1 [&>div]:bg-purple-500 [&>div]:animate-pulse"
+            />
+          </div>
+        );
+      }
+
       return (
         <div className="flex items-center gap-2 min-w-50">
           <span className="text-xs text-muted-foreground text-right">
@@ -179,7 +201,7 @@ const createColumns = (
     accessorKey: "actions",
     header: "",
     cell: ({ row }) => (
-      <TorrentAction torrent={row.original} onUpdate={onUpdate} />
+      <TorrentAction torrents={row.original} onUpdate={onUpdate} />
     ),
     enableSorting: false,
     size: 50,
@@ -187,11 +209,22 @@ const createColumns = (
 ];
 
 export interface TorrentListProps {
+  onSelect?: (torrents: NormalizedTorrent[]) => void;
   onClick?: (torrent: NormalizedTorrent | null) => void;
   onUpdate?: (torrent: NormalizedTorrent) => void;
+  onDataChange?: (data: AllClientData | null) => void;
+  onRefresh?: (refreshFn: () => void) => void;
+  filteredTorrents?: NormalizedTorrent[];
 }
 
-export const TorrentList: FC<TorrentListProps> = ({ onClick, onUpdate }) => {
+export const TorrentList: FC<TorrentListProps> = ({
+  onClick,
+  onUpdate,
+  onSelect,
+  onDataChange,
+  onRefresh,
+  filteredTorrents,
+}) => {
   const [data, setData] = useState<AllClientData | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clickedTorrentRef = useRef<NormalizedTorrent | null>(null);
@@ -216,6 +249,12 @@ export const TorrentList: FC<TorrentListProps> = ({ onClick, onUpdate }) => {
   const getAllData = useCallback(async () => {
     // Prevent fetching if unmounted
     if (!isMountedRef.current) return;
+
+    // Clear any existing timeout to prevent duplicate calls
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
 
     try {
       const list = await client.getAllData();
@@ -261,15 +300,29 @@ export const TorrentList: FC<TorrentListProps> = ({ onClick, onUpdate }) => {
     };
   }, [getAllData]);
 
+  // Notify parent of data changes
+  useEffect(() => {
+    onDataChange?.(data);
+  }, [data, onDataChange]);
+
+  // Expose refresh function to parent
+  useEffect(() => {
+    onRefresh?.(getAllData);
+  }, [getAllData, onRefresh]);
+
+  // Determine which torrents to display
+  const displayTorrents = filteredTorrents ?? data?.torrents ?? [];
+
   return (
     <DataTable
       className="rounded-xl h-full"
       columns={columns}
-      data={data?.torrents || []}
+      data={displayTorrents}
       enableSorting
       enableRowSelection
       onClickRow={handleClick}
       rowClassName={getRowClassName}
+      onRowSelectionChange={onSelect}
     />
   );
 };
