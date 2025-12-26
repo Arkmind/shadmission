@@ -228,16 +228,8 @@ export const SelectableChart: FC = () => {
               x2="0"
               y2="1"
             >
-              <stop
-                offset="5%"
-                stopColor="var(--color-upload)"
-                stopOpacity={0.8}
-              />
-              <stop
-                offset="95%"
-                stopColor="var(--color-upload)"
-                stopOpacity={0.1}
-              />
+              <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0.1} />
             </linearGradient>
             <linearGradient
               id="fillDownloadSelectable"
@@ -246,16 +238,8 @@ export const SelectableChart: FC = () => {
               x2="0"
               y2="1"
             >
-              <stop
-                offset="5%"
-                stopColor="var(--color-download)"
-                stopOpacity={0.8}
-              />
-              <stop
-                offset="95%"
-                stopColor="var(--color-download)"
-                stopOpacity={0.1}
-              />
+              <stop offset="5%" stopColor="var(--chart-2)" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0.1} />
             </linearGradient>
           </defs>
           <CartesianGrid vertical={false} />
@@ -288,14 +272,14 @@ export const SelectableChart: FC = () => {
             dataKey="download"
             type="monotone"
             fill="url(#fillDownloadSelectable)"
-            stroke="var(--color-download)"
+            stroke="var(--chart-2)"
             isAnimationActive={false}
           />
           <Area
             dataKey="upload"
             type="monotone"
             fill="url(#fillUploadSelectable)"
-            stroke="var(--color-upload)"
+            stroke="var(--chart-1)"
             isAnimationActive={false}
           />
           {(isSelecting || confirmedSelection) &&

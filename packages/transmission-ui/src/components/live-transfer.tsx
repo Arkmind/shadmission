@@ -1,6 +1,8 @@
 import { useSnapshots } from "@/hooks/use-snapshots";
+import { getSessionStats } from "@/lib/transmission";
+import { cn, formatBytes } from "@/lib/utils";
 import { ArrowDown, ArrowUp } from "lucide-react";
-import { type FC, useMemo } from "react";
+import { type FC, useEffect, useMemo, useState } from "react";
 
 const formatSpeed = (bytes: number): { value: string; unit: string } => {
   if (bytes === 0) return { value: "0", unit: "B/s" };
@@ -17,6 +19,10 @@ export const LiveTransfer: FC = () => {
   const { data, isConnected } = useSnapshots({
     bufferSize: 1,
   });
+  const [sessionTotals, setSessionTotals] = useState({
+    uploaded: 0,
+    downloaded: 0,
+  });
 
   const currentSpeed = useMemo(() => {
     if (data.length === 0) {
@@ -32,25 +38,66 @@ export const LiveTransfer: FC = () => {
     };
   }, [data]);
 
+  // Fetch session stats from Transmission
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const stats = await getSessionStats();
+        setSessionTotals({
+          uploaded: stats["current-stats"].uploadedBytes,
+          downloaded: stats["current-stats"].downloadedBytes,
+        });
+      } catch {
+        // Silently fail - totals will just show 0
+      }
+    };
+
+    fetchStats();
+    const interval = setInterval(fetchStats, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="flex justify-evenly space-x-16">
-      <div className="flex items-center">
-        <ArrowUp
-          className={isConnected ? "text-blue-500" : "text-muted-foreground"}
-        />
-        <h1 className="text-2xl font-bold">{currentSpeed.upload.value}</h1>
-        <span className="ml-1 text-xl font-light">
-          {currentSpeed.upload.unit}
-        </span>
+    <div className="flex flex-col items-center">
+      <div className="flex justify-evenly w-full">
+        <div className="flex items-end">
+          <ArrowUp
+            className={cn(
+              "h-5 w-5",
+              isConnected ? "text-blue-500" : "text-muted-foreground"
+            )}
+          />
+          <h1 className="text-2xl! font-bold leading-none">
+            {currentSpeed.upload.value}
+          </h1>
+          <span className="ml-1 font-light text-xs">
+            {currentSpeed.upload.unit}
+          </span>
+        </div>
+        <div className="flex items-end">
+          <ArrowDown
+            className={cn(
+              "h-5 w-5",
+              isConnected ? "text-green-500" : "text-muted-foreground"
+            )}
+          />
+          <h1 className="text-2xl! font-bold leading-none">
+            {currentSpeed.download.value}
+          </h1>
+          <span className="ml-1 font-light text-xs">
+            {currentSpeed.download.unit}
+          </span>
+        </div>
       </div>
-      <div className="flex items-center">
-        <ArrowDown
-          className={isConnected ? "text-green-500" : "text-muted-foreground"}
-        />
-        <h1 className="text-2xl font-bold">{currentSpeed.download.value}</h1>
-        <span className="ml-1 text-xl font-light">
-          {currentSpeed.download.unit}
-        </span>
+      <div className="flex justify-evenly w-full">
+        <div className="flex gap-1 text-xs justify-center text-muted-foreground">
+          <span>Total:</span>
+          <span>{formatBytes(sessionTotals.uploaded)}</span>
+        </div>
+        <div className="flex gap-1 text-xs justify-center text-muted-foreground">
+          <span>Total:</span>
+          <span>{formatBytes(sessionTotals.downloaded)}</span>
+        </div>
       </div>
     </div>
   );
