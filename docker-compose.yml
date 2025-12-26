@@ -22,6 +22,7 @@ services:
       QTB_PASSWORD: arky
       HTTPPROXY: off
       HTTP_CONTROL_SERVER_ADDRESS: :8000
+      HTTP_CONTROL_SERVER_CORS_ORIGINS: ${HTTP_CONTROL_SERVER_CORS_ORIGINS}
       VPN_PORT_FORWARDING_UP_COMMAND: |
         /bin/sh -c '
           apk add --no-cache transmission-remote >/dev/null 2>&1 || true

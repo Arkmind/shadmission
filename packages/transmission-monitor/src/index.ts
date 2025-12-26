@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import { WebSocket, WebSocketServer } from "ws";
@@ -19,7 +20,7 @@ const CLEANUP_INTERVAL_MS = 60 * 60 * 1000; // Cleanup every hour
 
 // CORS middleware
 app.use((_req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Origin", process.env.CORS_ORIGINS ?? "*");
   res.header("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type");
   next();
@@ -120,6 +121,75 @@ app.get("/snapshots", (req, res) => {
 // Health check endpoint
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: Date.now() });
+});
+
+// Gluetun proxy endpoints (to avoid CORS issues)
+const GLUETUN_HOST = process.env.GLUETUN_HOST ?? "gluetun";
+const GLUETUN_PORT = process.env.GLUETUN_PORT ?? "8000";
+const GLUETUN_AUTH = process.env.GLUETUN_AUTH ?? ""; // "apikey" or "basic"
+const GLUETUN_API_KEY = process.env.GLUETUN_API_KEY ?? "";
+const GLUETUN_USERNAME = process.env.GLUETUN_USERNAME ?? "";
+const GLUETUN_PASSWORD = process.env.GLUETUN_PASSWORD ?? "";
+
+const fetchGluetun = async (path: string) => {
+  const url = `http://${GLUETUN_HOST}:${GLUETUN_PORT}${path}`;
+  const headers: Record<string, string> = {};
+
+  if (GLUETUN_AUTH === "apikey" && GLUETUN_API_KEY) {
+    headers["X-API-Key"] = GLUETUN_API_KEY;
+  } else if (GLUETUN_AUTH === "basic" && GLUETUN_USERNAME && GLUETUN_PASSWORD) {
+    headers["Authorization"] = `Basic ${Buffer.from(
+      `${GLUETUN_USERNAME}:${GLUETUN_PASSWORD}`
+    ).toString("base64")}`;
+  }
+
+  const response = await fetch(url, { headers });
+  if (!response.ok) {
+    throw new Error(`Gluetun API error: ${response.status}`);
+  }
+  return response.json();
+};
+
+app.get("/gluetun/publicip", async (_req, res) => {
+  try {
+    const data = await fetchGluetun("/v1/publicip/ip");
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching Gluetun public IP:", error);
+    res.status(502).json({ error: "Failed to fetch public IP from Gluetun" });
+  }
+});
+
+app.get("/gluetun/portforward", async (_req, res) => {
+  try {
+    const data = await fetchGluetun("/v1/portforward");
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching Gluetun port forward:", error);
+    res
+      .status(502)
+      .json({ error: "Failed to fetch port forward from Gluetun" });
+  }
+});
+
+app.get("/gluetun/vpn/status", async (_req, res) => {
+  try {
+    const data = await fetchGluetun("/v1/vpn/status");
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching Gluetun VPN status:", error);
+    res.status(502).json({ error: "Failed to fetch VPN status from Gluetun" });
+  }
+});
+
+app.get("/gluetun/dns/status", async (_req, res) => {
+  try {
+    const data = await fetchGluetun("/v1/dns/status");
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching Gluetun DNS status:", error);
+    res.status(502).json({ error: "Failed to fetch DNS status from Gluetun" });
+  }
 });
 
 // Start snapshot collection

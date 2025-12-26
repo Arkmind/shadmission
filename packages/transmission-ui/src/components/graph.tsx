@@ -93,7 +93,7 @@ export const Graph: FC = () => {
 
   if (isLoading && data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full min-h-52">
+      <div className="flex items-center justify-center h-full min-h-10">
         <span className="text-muted-foreground">Loading snapshots...</span>
       </div>
     );
@@ -101,7 +101,7 @@ export const Graph: FC = () => {
 
   if (error && data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full min-h-52">
+      <div className="flex items-center justify-center h-full min-h-10">
         <span className="text-destructive">{error}</span>
       </div>
     );
@@ -110,7 +110,7 @@ export const Graph: FC = () => {
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full cursor-grab active:cursor-grabbing"
+      className="relative h-full w-full cursor-grab active:cursor-grabbing flex justify-center"
     >
       {/* Status bar */}
       <div className="absolute bottom-0 left-4 z-10 flex items-center gap-2 text-xs text-muted-foreground">
@@ -136,7 +136,7 @@ export const Graph: FC = () => {
 
       <ChartContainer
         config={chartConfig}
-        className="min-h-52 h-full w-full pb-4"
+        className="min-h-10 h-full w-full pb-4 aspect-auto"
       >
         <AreaChart data={data}>
           <defs>
@@ -173,7 +173,7 @@ export const Graph: FC = () => {
             tickLine={false}
             axisLine={false}
             tickMargin={8}
-            minTickGap={32}
+            minTickGap={16}
             tickFormatter={(value) => {
               return new Date(value).toLocaleTimeString(navigator.language, {
                 hour: "numeric",
@@ -187,7 +187,7 @@ export const Graph: FC = () => {
             tickLine={false}
             axisLine={false}
             tickMargin={8}
-            width={90}
+            width={80}
             tickFormatter={formatSpeed}
           />
           <ChartTooltip cursor={false} content={<GraphTooltip />} />

@@ -13,6 +13,7 @@
     "dependencies": {
         "@ctrl/transmission": "^7.4.0",
         "better-sqlite3": "^12.5.0",
+        "dotenv": "^17.2.3",
         "express": "^5.1.0",
         "geoip-lite": "^1.4.10",
         "ws": "^8.18.0"
