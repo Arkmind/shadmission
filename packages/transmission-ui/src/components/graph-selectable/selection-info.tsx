@@ -73,53 +73,55 @@ export const SelectionInfo: FC = () => {
         </div>
       </div>
 
-      {/* Selection Info */}
-      {confirmedSelection ? (
-        <>
-          <div className="space-y-3 py-4 border-b">
-            <div className="text-sm font-medium">Selection</div>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <div className="text-xs text-muted-foreground">Start</div>
-                <div className="font-mono text-xs">
-                  {new Date(
-                    Math.min(
-                      confirmedSelection.startTimestamp,
-                      confirmedSelection.endTimestamp
-                    )
-                  ).toLocaleTimeString()}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">End</div>
-                <div className="font-mono text-xs">
-                  {new Date(
-                    Math.max(
-                      confirmedSelection.startTimestamp,
-                      confirmedSelection.endTimestamp
-                    )
-                  ).toLocaleTimeString()}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Duration</div>
-                <div className="font-medium">
-                  {formatTime(
-                    Math.abs(
-                      confirmedSelection.endTimestamp -
-                        confirmedSelection.startTimestamp
-                    ) / 1000
-                  )}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Snapshots</div>
-                <div className="font-medium">{snapshotCount}</div>
+      {/* Selection Info (only when there's a selection) */}
+      {confirmedSelection && (
+        <div className="space-y-3 py-4 border-b">
+          <div className="text-sm font-medium">Selection</div>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <div className="text-xs text-muted-foreground">Start</div>
+              <div className="font-mono text-xs">
+                {new Date(
+                  Math.min(
+                    confirmedSelection.startTimestamp,
+                    confirmedSelection.endTimestamp
+                  )
+                ).toLocaleTimeString()}
               </div>
             </div>
+            <div>
+              <div className="text-xs text-muted-foreground">End</div>
+              <div className="font-mono text-xs">
+                {new Date(
+                  Math.max(
+                    confirmedSelection.startTimestamp,
+                    confirmedSelection.endTimestamp
+                  )
+                ).toLocaleTimeString()}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Duration</div>
+              <div className="font-medium">
+                {formatTime(
+                  Math.abs(
+                    confirmedSelection.endTimestamp -
+                      confirmedSelection.startTimestamp
+                  ) / 1000
+                )}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Snapshots</div>
+              <div className="font-medium">{snapshotCount}</div>
+            </div>
           </div>
+        </div>
+      )}
 
-          {/* Stats */}
+      {/* Stats - always shown when there's data */}
+      {aggregatedData && aggregatedData.length > 0 ? (
+        <>
           <div className="space-y-3 py-4 border-b">
             <div className="text-sm font-medium">Statistics</div>
             <div className="grid grid-cols-2 gap-3">
@@ -203,7 +205,7 @@ export const SelectionInfo: FC = () => {
         </>
       ) : (
         <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground text-center p-4">
-          Select a time range on the graph to view details
+          No data in this time range
         </div>
       )}
     </div>

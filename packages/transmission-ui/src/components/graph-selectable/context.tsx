@@ -50,18 +50,28 @@ export const GraphSelectableProvider: FC<GraphSelectableProviderProps> = ({
 
   const isLive = useMemo(() => endTimeOffset === 0, [endTimeOffset]);
 
+  // Use selected data if there's a selection, otherwise use current visible timeRange
   const selectedData = useMemo(() => {
-    if (!confirmedSelection) return null;
-    const { startTimestamp, endTimestamp } = confirmedSelection;
-    const minTs = Math.min(startTimestamp, endTimestamp);
-    const maxTs = Math.max(startTimestamp, endTimestamp);
+    if (confirmedSelection) {
+      const { startTimestamp, endTimestamp } = confirmedSelection;
+      const minTs = Math.min(startTimestamp, endTimestamp);
+      const maxTs = Math.max(startTimestamp, endTimestamp);
+      return data.filter(
+        (snapshot) => snapshot.timestamp >= minTs && snapshot.timestamp <= maxTs
+      );
+    }
+    // Default to current visible timeRange based on timeRange and offset
+    const now = Date.now();
+    const endTime = now - endTimeOffset;
+    const startTime = endTime - timeRange;
     return data.filter(
-      (snapshot) => snapshot.timestamp >= minTs && snapshot.timestamp <= maxTs
+      (snapshot) =>
+        snapshot.timestamp >= startTime && snapshot.timestamp <= endTime
     );
-  }, [confirmedSelection, data]);
+  }, [confirmedSelection, data, timeRange, endTimeOffset]);
 
   const aggregatedData = useMemo(() => {
-    if (!selectedData || selectedData.length === 0) return null;
+    if (selectedData.length === 0) return null;
 
     const torrentsMap = new Map<number, AggregatedTorrent>();
 
@@ -152,7 +162,7 @@ export const GraphSelectableProvider: FC<GraphSelectableProviderProps> = ({
       confirmedSelection,
       setConfirmedSelection,
       aggregatedData,
-      snapshotCount: selectedData?.length ?? 0,
+      snapshotCount: selectedData.length,
       isConnected,
       timeRange,
       setTimeRange,

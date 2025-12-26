@@ -6,21 +6,13 @@ import { useGraphSelectable } from "./context";
 import type { AggregatedPeer, AggregatedTorrent } from "./types";
 
 export const SelectionTorrentsList: FC = () => {
-  const { aggregatedData, confirmedSelection } = useGraphSelectable();
+  const { aggregatedData } = useGraphSelectable();
   const [expandedTorrent, setExpandedTorrent] = useState<number | null>(null);
-
-  if (!confirmedSelection) {
-    return (
-      <div className="flex items-center justify-center h-full text-sm text-muted-foreground select-none">
-        Select a time range to view torrents
-      </div>
-    );
-  }
 
   if (!aggregatedData || aggregatedData.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-sm text-muted-foreground select-none">
-        No active torrents in selected range
+        No active torrents in this time range
       </div>
     );
   }

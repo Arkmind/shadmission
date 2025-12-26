@@ -8,11 +8,18 @@ import {
 } from "recharts";
 
 import { GraphTooltip } from "@/components/graph-tooltip";
+import { Button } from "@/components/ui/button";
 import {
   ChartContainer,
   ChartTooltip,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { formatSpeed, formatTime } from "@/lib/utils";
 import { useCallback, useEffect, useRef, useState, type FC } from "react";
 import { useGraphSelectable } from "./context";
@@ -79,13 +86,30 @@ export const SelectableChart: FC = () => {
 
   const handleMouseUp = useCallback(() => {
     if (isSelecting && selectionStart !== null && selectionEnd !== null) {
-      setConfirmedSelection({
-        startTimestamp: selectionStart,
-        endTimestamp: selectionEnd,
-      });
+      // Only create selection if there's an actual drag (different start/end points)
+      const minTs = Math.min(selectionStart, selectionEnd);
+      const maxTs = Math.max(selectionStart, selectionEnd);
+      if (maxTs - minTs > 500) {
+        // At least 500ms difference to count as a drag
+        setConfirmedSelection({
+          startTimestamp: selectionStart,
+          endTimestamp: selectionEnd,
+        });
+      } else {
+        // Single click - clear the selection
+        setSelectionStart(null);
+        setSelectionEnd(null);
+        clearSelection();
+      }
     }
     setIsSelecting(false);
-  }, [isSelecting, selectionStart, selectionEnd, setConfirmedSelection]);
+  }, [
+    isSelecting,
+    selectionStart,
+    selectionEnd,
+    setConfirmedSelection,
+    clearSelection,
+  ]);
 
   const handleClearSelection = useCallback(() => {
     setSelectionStart(null);
@@ -160,19 +184,20 @@ export const SelectableChart: FC = () => {
             isConnected ? "bg-green-500" : "bg-red-500"
           }`}
         />
-        <span>
-          {formatTime(timeRange / 1000)}
-          <span className="text-muted-foreground/50 mx-1">•</span>
-          {isLive ? "Live" : formatTime(endTimeOffset / 1000)}
-        </span>
-        {!isLive && (
-          <button
-            onClick={() => setEndTimeOffset(0)}
-            className="text-xs underline hover:text-foreground"
-          >
-            Back to live
-          </button>
-        )}
+        <DurationPicker
+          value={timeRange}
+          onChange={setTimeRange}
+          label="Time Range"
+          presets={TIME_RANGE_PRESETS}
+        />
+        <span className="text-muted-foreground/50">•</span>
+        <DurationPicker
+          value={endTimeOffset}
+          onChange={setEndTimeOffset}
+          label="Offset"
+          presets={OFFSET_PRESETS}
+        />
+        {isLive && <span className="text-green-500 text-xs">Live</span>}
       </div>
 
       {confirmedSelection && (
@@ -294,5 +319,151 @@ export const SelectableChart: FC = () => {
         </AreaChart>
       </ChartContainer>
     </div>
+  );
+};
+
+// Duration presets in milliseconds
+const TIME_RANGE_PRESETS = [
+  { label: "1m", value: 60 * 1000 },
+  { label: "5m", value: 5 * 60 * 1000 },
+  { label: "15m", value: 15 * 60 * 1000 },
+  { label: "30m", value: 30 * 60 * 1000 },
+  { label: "1h", value: 60 * 60 * 1000 },
+  { label: "2h", value: 2 * 60 * 60 * 1000 },
+  { label: "6h", value: 6 * 60 * 60 * 1000 },
+  { label: "12h", value: 12 * 60 * 60 * 1000 },
+  { label: "24h", value: 24 * 60 * 60 * 1000 },
+];
+
+const OFFSET_PRESETS = [
+  { label: "Live", value: 0 },
+  { label: "1m ago", value: 60 * 1000 },
+  { label: "5m ago", value: 5 * 60 * 1000 },
+  { label: "15m ago", value: 15 * 60 * 1000 },
+  { label: "30m ago", value: 30 * 60 * 1000 },
+  { label: "1h ago", value: 60 * 60 * 1000 },
+  { label: "2h ago", value: 2 * 60 * 60 * 1000 },
+  { label: "6h ago", value: 6 * 60 * 60 * 1000 },
+  { label: "12h ago", value: 12 * 60 * 60 * 1000 },
+];
+
+interface DurationPickerProps {
+  value: number;
+  onChange: (value: number) => void;
+  label: string;
+  presets: { label: string; value: number }[];
+}
+
+const DurationPicker: FC<DurationPickerProps> = ({
+  value,
+  onChange,
+  label,
+  presets,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [customMinutes, setCustomMinutes] = useState("");
+  const [customSeconds, setCustomSeconds] = useState("");
+
+  const handlePresetClick = (presetValue: number) => {
+    onChange(presetValue);
+    setIsOpen(false);
+  };
+
+  const handleCustomSubmit = () => {
+    const minutes = parseInt(customMinutes) || 0;
+    const seconds = parseInt(customSeconds) || 0;
+    const totalMs = (minutes * 60 + seconds) * 1000;
+    if (totalMs > 0) {
+      onChange(totalMs);
+      setIsOpen(false);
+      setCustomMinutes("");
+      setCustomSeconds("");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleCustomSubmit();
+    }
+  };
+
+  const formatValue = (ms: number) => formatTime(ms / 1000);
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <button className="px-2 py-0.5 bg-muted/50 border border-input rounded text-xs font-mono hover:bg-muted transition-colors cursor-pointer min-w-18 text-center">
+          {formatValue(value)}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-3" align="start">
+        <div className="space-y-3">
+          <div className="text-xs font-medium text-muted-foreground">
+            {label}
+          </div>
+
+          {/* Presets grid */}
+          <div className="grid grid-cols-3 gap-1.5">
+            {presets.map((preset) => (
+              <Button
+                key={preset.value}
+                variant={value === preset.value ? "default" : "outline"}
+                size="sm"
+                className="text-xs h-7"
+                onClick={() => handlePresetClick(preset.value)}
+              >
+                {preset.label}
+              </Button>
+            ))}
+          </div>
+
+          {/* Custom input */}
+          <div className="border-t pt-3">
+            <div className="text-xs text-muted-foreground mb-2">
+              Custom duration
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={customMinutes}
+                  onChange={(e) => setCustomMinutes(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="h-8 text-xs"
+                />
+                <span className="text-xs text-muted-foreground mt-0.5 block">
+                  minutes
+                </span>
+              </div>
+              <span className="text-muted-foreground">:</span>
+              <div className="flex-1">
+                <Input
+                  type="number"
+                  min="0"
+                  max="59"
+                  placeholder="0"
+                  value={customSeconds}
+                  onChange={(e) => setCustomSeconds(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="h-8 text-xs"
+                />
+                <span className="text-xs text-muted-foreground mt-0.5 block">
+                  seconds
+                </span>
+              </div>
+              <Button
+                size="sm"
+                className="h-8 px-3"
+                onClick={handleCustomSubmit}
+              >
+                Set
+              </Button>
+            </div>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 };
