@@ -18,21 +18,20 @@ services:
       SERVER_COUNTRIES: France,Netherlands,Switzerland,Belgium
       PORT_FORWARD_ONLY: on
       DOT_PROVIDERS: cloudflare,quad9
-      QTB_USERNAME: arky
-      QTB_PASSWORD: arky
+      TRANSMISSION_USERNAME: ${TRANSMISSION_USERNAME}
+      TRANSMISSION_PASSWORD: ${TRANSMISSION_PASSWORD}
       HTTPPROXY: off
       HTTP_CONTROL_SERVER_ADDRESS: :8000
-      HTTP_CONTROL_SERVER_CORS_ORIGINS: ${HTTP_CONTROL_SERVER_CORS_ORIGINS}
       VPN_PORT_FORWARDING_UP_COMMAND: |
         /bin/sh -c '
           apk add --no-cache transmission-remote >/dev/null 2>&1 || true
           
           echo "Waiting for Transmission to be ready..."
           for i in 1 2 3 4 5 6 7 8 9 10; do
-            if transmission-remote localhost:9091 -n "arky:arky" -l >/dev/null 2>&1; then
+            if transmission-remote localhost:9091 -n "$TRANSMISSION_USERNAME:$TRANSMISSION_PASSWORD" -l >/dev/null 2>&1; then
               echo "Transmission is ready, setting port {{PORTS}}"
-              transmission-remote localhost:9091 -n "arky:arky" -p {{PORTS}} && \
-              transmission-remote localhost:9091 -n "arky:arky" -t all --reannounce && \
+              transmission-remote localhost:9091 -n "$TRANSMISSION_USERNAME:$TRANSMISSION_PASSWORD" -p {{PORTS}} && \
+              transmission-remote localhost:9091 -n "$TRANSMISSION_USERNAME:$TRANSMISSION_PASSWORD" -t all --reannounce && \
               echo "Port forwarding configured successfully" && exit 0
             fi
             echo "Attempt $i: Transmission not ready, waiting 2s..."
@@ -56,8 +55,8 @@ services:
         condition: service_healthy
     environment:
       TZ: Europe/Paris
-      USER: arky
-      PASS: arky
+      USER: ${TRANSMISSION_USERNAME}
+      PASS: ${TRANSMISSION_PASSWORD}
       PUID: 1000
       PGID: 1000
       TRANSMISSION_WEB_HOME: /webui/dist
@@ -67,6 +66,27 @@ services:
       - transmission_config:/config
       - ./transmission_ui:/webui:rw
       - ./downloads:/downloads:rw
+    restart: unless-stopped
+    network_mode: "service:gluetun"
+
+  transmission-monitor:
+    build: ./packages/transmission-monitor
+    container_name: transmission-monitor
+    depends_on:
+      - transmission
+    environment:
+      PORT: 3000
+      TRANSMISSION_URL: http://transmission:9091
+      TRANSMISSION_USER: ${TRANSMISSION_USERNAME}
+      TRANSMISSION_PASS: ${TRANSMISSION_PASSWORD}
+      POLLING_INTERVAL: 1000
+      GLUETUN_HOST: gluetun
+      GLUETUN_PORT: 8000
+      GLUETUN_AUTH: ${GLUETUN_AUTH}
+      GLUETUN_API_KEY: ${GLUETUN_API_KEY}
+      TZ: Europe/Paris
+    volumes:
+      - ./monitor_config:/app/data
     restart: unless-stopped
     network_mode: "service:gluetun"
 
