@@ -16,6 +16,12 @@
 
 ---
 
+## 🚩 Beforehand
+
+Shadmission is still in development and may have bugs or missing features. I am still trying to figure out a way to handle the monitoring service in a way that is easy to deploy.
+At the moment, being forced to use client-side requests due to how Transmission handles the front-end is not ideal for fetching real-time data from the monitoring service, as it causes CORS issues and complicates the setup by requiring a Traefik or Nginx reverse proxy to handle the requests.
+Please report any issues or feature requests on the [GitHub Issues](https://github.com/Arkmind/shadmission/issues).
+
 ## ✨ Features
 
 - 🎨 **Beautiful Modern UI** - Clean interface built with shadcn/ui components and Tailwind CSS
@@ -195,8 +201,8 @@ GLUETUN_API_KEY=your_api_key_here
 VITE_GLUETUN_ENABLED=false
 
 # Monitor service connection
-VITE_MONITOR_HOST=localhost
-VITE_MONITOR_PORT=3000
+VITE_MONITOR_URL=http://localhost:3000
+VITE_MONITOR_WS_URL=ws://localhost:3000
 ```
 
 #### 3. Start development servers
@@ -224,8 +230,8 @@ npm run build
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `VITE_MONITOR_HOST` | `localhost` | Monitor service hostname |
-| `VITE_MONITOR_PORT` | `3000` | Monitor service port |
+| `VITE_MONITOR_URL` | `http://localhost:3000` | URL of the transmission-monitor service |
+| `VITE_MONITOR_WS_URL` | `ws://localhost:3000` | WebSocket URL of the transmission-monitor service |
 | `VITE_GLUETUN_ENABLED` | `false` | Enable Gluetun VPN status display |
 
 #### transmission-monitor
