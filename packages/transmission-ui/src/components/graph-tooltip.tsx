@@ -56,7 +56,7 @@ export const GraphTooltip: FC<GraphTooltipProps> = ({ active, payload }) => {
         <span className="font-medium">{formatSpeed(data.upload)}</span>
       </div>
 
-      {details.length > 0 && (
+      {details.filter((t) => t.download > 0 || t.upload > 0).length > 0 && (
         <div className="mt-2 pt-2 border-t">
           <div className="text-xs text-muted-foreground mb-1">
             Active torrents:
