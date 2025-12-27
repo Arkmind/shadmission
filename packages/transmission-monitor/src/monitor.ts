@@ -3,9 +3,9 @@ import { Transmission } from "@ctrl/transmission";
 import geoip from "geoip-lite";
 
 export const client = new Transmission({
-  baseUrl: process.env.TRANSMISSION_HOST ?? "http://localhost:9091",
-  username: process.env.TRANSMISSION_USERNAME ?? "arky",
-  password: process.env.TRANSMISSION_PASSWORD ?? "arky",
+  baseUrl: process.env.TRANSMISSION_URL ?? "http://localhost:9091",
+  username: process.env.TRANSMISSION_USER ?? "arky",
+  password: process.env.TRANSMISSION_PASS ?? "arky",
 });
 
 export interface PeerInfo {

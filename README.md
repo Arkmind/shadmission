@@ -203,6 +203,11 @@ VITE_GLUETUN_ENABLED=false
 # Monitor service connection
 VITE_MONITOR_URL=http://localhost:3000
 VITE_MONITOR_WS_URL=ws://localhost:3000
+
+# Transmission RPC connection
+VITE_TRANSMISSION_URL=http://localhost:9091
+VITE_TRANSMISSION_USER=your_username
+VITE_TRANSMISSION_PASS=your_password
 ```
 
 #### 3. Start development servers
@@ -233,6 +238,9 @@ npm run build
 | `VITE_MONITOR_URL` | `http://localhost:3000` | URL of the transmission-monitor service |
 | `VITE_MONITOR_WS_URL` | `ws://localhost:3000` | WebSocket URL of the transmission-monitor service |
 | `VITE_GLUETUN_ENABLED` | `false` | Enable Gluetun VPN status display |
+| `VITE_TRANSMISSION_URL` | `http://localhost:9091` | Transmission RPC URL |
+| `VITE_TRANSMISSION_USER` | - | Transmission username |
+| `VITE_TRANSMISSION_PASS` | - | Transmission password |
 
 #### transmission-monitor
 
