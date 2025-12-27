@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌊 Shadmission
+# <img src="/packages/transmission-ui/public/logo.svg" alt="Shadmission Logo" height="40" /> Shadmission
 
 **A modern, beautiful web UI for Transmission BitTorrent client**
 
