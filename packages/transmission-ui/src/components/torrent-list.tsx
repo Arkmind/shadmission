@@ -315,7 +315,7 @@ export const TorrentList: FC<TorrentListProps> = ({
 
   return (
     <DataTable
-      className="rounded-xl h-full"
+      className="h-full"
       columns={columns}
       data={displayTorrents}
       enableSorting

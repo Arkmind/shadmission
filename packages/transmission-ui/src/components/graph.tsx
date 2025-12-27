@@ -187,7 +187,7 @@ export const Graph: FC = () => {
             tickLine={false}
             axisLine={false}
             tickMargin={8}
-            width={80}
+            width={88}
             tickFormatter={formatSpeed}
           />
           <ChartTooltip cursor={false} content={<GraphTooltip />} />

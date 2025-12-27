@@ -10,6 +10,6 @@ export function ButtonTable({
     asChild?: boolean;
   }) {
   return (
-    <Button variant="ghost" className={cn("px-0!", className)} {...props} />
+    <Button variant="ghost" className={cn("-ml-2", className)} {...props} />
   );
 }
