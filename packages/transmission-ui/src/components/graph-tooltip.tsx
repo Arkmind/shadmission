@@ -1,6 +1,7 @@
 import type { TorrentDetail } from "@/lib/monitor";
 import { formatSpeed } from "@/lib/utils";
 import type { FC } from "react";
+import { ScrollArea } from "./ui/scroll-area";
 
 interface GraphTooltipData {
   timestamp: number;
@@ -60,22 +61,26 @@ export const GraphTooltip: FC<GraphTooltipProps> = ({ active, payload }) => {
           <div className="text-xs text-muted-foreground mb-1">
             Active torrents:
           </div>
-          <div className="space-y-1 max-h-32 overflow-y-auto">
-            {details.map((torrent) => (
-              <div
-                key={torrent.torrent_id}
-                className="text-xs flex justify-between gap-2"
-              >
-                <span className="truncate max-w-32" title={torrent.torrent}>
-                  {torrent.torrent}
-                </span>
-                <span className="text-muted-foreground whitespace-nowrap">
-                  ↓{formatSpeed(torrent.download)} ↑
-                  {formatSpeed(torrent.upload)}
-                </span>
-              </div>
-            ))}
-          </div>
+          <ScrollArea className="max-h-32">
+            <div className="space-y-1 h-full">
+              {details
+                .filter((t) => t.download > 0 || t.upload > 0)
+                .map((torrent) => (
+                  <div
+                    key={torrent.torrent_id}
+                    className="text-xs flex justify-between gap-2"
+                  >
+                    <span className="truncate max-w-32" title={torrent.torrent}>
+                      {torrent.torrent}
+                    </span>
+                    <span className="text-muted-foreground whitespace-nowrap">
+                      ↓{formatSpeed(torrent.download)} ↑
+                      {formatSpeed(torrent.upload)}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </ScrollArea>
         </div>
       )}
     </div>
