@@ -335,7 +335,7 @@ export const TorrentList: FC<TorrentListProps> = ({
 
     // Schedule next fetch only if still mounted
     if (isMountedRef.current) {
-      // timeoutRef.current = setTimeout(() => getAllDataRef.current?.(), 1000);
+      timeoutRef.current = setTimeout(() => getAllDataRef.current?.(), 1000);
     }
   }, []);
 
