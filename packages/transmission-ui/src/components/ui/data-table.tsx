@@ -3,6 +3,7 @@
 import {
   type ColumnDef,
   type ColumnFiltersState,
+  type ColumnSizingState,
   type RowSelectionState,
   type SortingState,
   type VisibilityState,
@@ -58,12 +59,36 @@ interface DataTableProps<TData, TValue> {
   pageSize?: number;
   enableActions?: boolean;
   actions?: DataTableAction<TData>[];
+  enableColumnResizing?: boolean;
+  columnSizingStorageKey?: string;
   // Selection callback
   onRowSelectionChange?: (selectedRows: TData[]) => void;
   onClickRow?: (row: TData) => void;
   // Custom row styling
   rowClassName?: (row: TData) => string;
 }
+
+// Helper to load column sizing from localStorage
+const loadColumnSizing = (key: string): ColumnSizingState => {
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      return JSON.parse(stored) as ColumnSizingState;
+    }
+  } catch (e) {
+    console.warn("Failed to load column sizing from localStorage", e);
+  }
+  return {};
+};
+
+// Helper to save column sizing to localStorage
+const saveColumnSizing = (key: string, sizing: ColumnSizingState) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(sizing));
+  } catch (e) {
+    console.warn("Failed to save column sizing to localStorage", e);
+  }
+};
 
 export function DataTable<TData, TValue>({
   className,
@@ -79,6 +104,8 @@ export function DataTable<TData, TValue>({
   pageSize = 10,
   enableActions = false,
   actions = [],
+  enableColumnResizing = false,
+  columnSizingStorageKey,
   onRowSelectionChange,
   onClickRow,
   rowClassName,
@@ -90,6 +117,10 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
+  const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>(
+    () =>
+      columnSizingStorageKey ? loadColumnSizing(columnSizingStorageKey) : {}
+  );
 
   // Build columns with optional select and actions columns
   const columns = React.useMemo(() => {
@@ -189,13 +220,29 @@ export function DataTable<TData, TValue>({
     ...(enableRowSelection && {
       onRowSelectionChange: setRowSelection,
     }),
+    ...(enableColumnResizing && {
+      columnResizeMode: "onEnd" as const,
+      onColumnSizingChange: setColumnSizing,
+    }),
     state: {
       ...(enableSorting && { sorting }),
       ...(enableFiltering && { columnFilters }),
       ...(enableColumnVisibility && { columnVisibility }),
       ...(enableRowSelection && { rowSelection }),
+      ...(enableColumnResizing && { columnSizing }),
     },
   });
+
+  // Persist column sizing to localStorage when it changes
+  React.useEffect(() => {
+    if (
+      enableColumnResizing &&
+      columnSizingStorageKey &&
+      Object.keys(columnSizing).length > 0
+    ) {
+      saveColumnSizing(columnSizingStorageKey, columnSizing);
+    }
+  }, [columnSizing, enableColumnResizing, columnSizingStorageKey]);
 
   // Call onRowSelectionChange when selection changes
   React.useEffect(() => {
@@ -259,20 +306,50 @@ export function DataTable<TData, TValue>({
       )}
 
       {/* Table */}
-      <div className="overflow-hidden">
-        <Table className={className}>
+      <div className="overflow-auto flex-1">
+        <Table
+          className={className}
+          style={
+            enableColumnResizing
+              ? { width: table.getCenterTotalSize(), tableLayout: "fixed" }
+              : undefined
+          }
+        >
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="hover:bg-transparent">
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead
+                      key={header.id}
+                      className="group/header"
+                      style={
+                        enableColumnResizing
+                          ? {
+                              width: header.getSize(),
+                              position: "relative",
+                            }
+                          : undefined
+                      }
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
                             header.getContext()
                           )}
+                      {enableColumnResizing && header.column.getCanResize() && (
+                        <div
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                          onDoubleClick={() => header.column.resetSize()}
+                          className={`absolute right-0 top-0 h-full w-2 cursor-col-resize select-none touch-none opacity-0 hover:opacity-100 group-hover/header:opacity-100 hover:bg-primary/50 ${
+                            header.column.getIsResizing()
+                              ? "bg-primary opacity-100"
+                              : "bg-border"
+                          }`}
+                        />
+                      )}
                     </TableHead>
                   );
                 })}
@@ -289,7 +366,20 @@ export function DataTable<TData, TValue>({
                   className={rowClassName?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      style={
+                        enableColumnResizing
+                          ? {
+                              width: cell.column.getSize(),
+                              maxWidth: cell.column.getSize(),
+                            }
+                          : undefined
+                      }
+                      className={
+                        enableColumnResizing ? "overflow-hidden" : undefined
+                      }
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

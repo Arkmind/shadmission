@@ -18,6 +18,7 @@ import { TorrentAction } from "./torrent-action";
 import { ButtonTable } from "./ui/button-table";
 import { DataTable } from "./ui/data-table";
 import { Progress } from "./ui/progress";
+import { ScrollArea } from "./ui/scroll-area";
 
 // Get row class based on torrent state
 const getRowClassName = (torrent: NormalizedTorrent): string => {
@@ -56,6 +57,13 @@ const createColumns = (
         <ArrowUpDown className="h-2 w-2" />
       </ButtonTable>
     ),
+    cell: ({ row }) => (
+      <span className="block truncate" title={row.getValue<string>("name")}>
+        {row.getValue<string>("name")}
+      </span>
+    ),
+    size: 250,
+    minSize: 100,
   },
   {
     accessorKey: "progress",
@@ -67,6 +75,8 @@ const createColumns = (
         <ArrowUpDown className="h-2 w-2" />
       </ButtonTable>
     ),
+    size: 150,
+    minSize: 100,
     cell: ({ row }) => {
       const progress = row.getValue<number>("progress") * 100;
       const isChecking = row.original.state === "checking";
@@ -76,8 +86,8 @@ const createColumns = (
           ((row.original as unknown as { recheckProgress: number })
             .recheckProgress ?? 0) * 100;
         return (
-          <div className="flex items-center gap-2 min-w-50">
-            <span className="text-xs text-purple-500 text-right animate-pulse">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-purple-500 text-right animate-pulse w-10 shrink-0">
               {recheckProgress.toFixed(1)}%
             </span>
             <Progress
@@ -89,8 +99,8 @@ const createColumns = (
       }
 
       return (
-        <div className="flex items-center gap-2 min-w-50">
-          <span className="text-xs text-muted-foreground text-right">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground text-right w-10 shrink-0">
             {progress.toFixed(1)}%
           </span>
           <Progress value={progress} className="flex-1" />
@@ -108,7 +118,13 @@ const createColumns = (
         <ArrowUpDown className="h-2 w-2" />
       </ButtonTable>
     ),
-    cell: ({ row }) => formatEta(row.getValue<number>("eta")),
+    size: 80,
+    minSize: 50,
+    cell: ({ row }) => (
+      <span className="block truncate">
+        {formatEta(row.getValue<number>("eta"))}
+      </span>
+    ),
   },
   {
     accessorKey: "downloadSpeed",
@@ -116,11 +132,17 @@ const createColumns = (
       <ButtonTable
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        Download
+        Down
         <ArrowUpDown className="h-2 w-2" />
       </ButtonTable>
     ),
-    cell: ({ row }) => formatSpeed(row.getValue<number>("downloadSpeed")),
+    size: 90,
+    minSize: 60,
+    cell: ({ row }) => (
+      <span className="block truncate">
+        {formatSpeed(row.getValue<number>("downloadSpeed"))}
+      </span>
+    ),
   },
   {
     accessorKey: "uploadSpeed",
@@ -128,11 +150,17 @@ const createColumns = (
       <ButtonTable
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        Upload
+        Up
         <ArrowUpDown className="h-2 w-2" />
       </ButtonTable>
     ),
-    cell: ({ row }) => formatSpeed(row.getValue<number>("uploadSpeed")),
+    size: 90,
+    minSize: 60,
+    cell: ({ row }) => (
+      <span className="block truncate">
+        {formatSpeed(row.getValue<number>("uploadSpeed"))}
+      </span>
+    ),
   },
   {
     accessorKey: "totalSize",
@@ -144,7 +172,13 @@ const createColumns = (
         <ArrowUpDown className="h-2 w-2" />
       </ButtonTable>
     ),
-    cell: ({ row }) => formatBytes(row.getValue<number>("totalSize")),
+    size: 80,
+    minSize: 60,
+    cell: ({ row }) => (
+      <span className="block truncate">
+        {formatBytes(row.getValue<number>("totalSize"))}
+      </span>
+    ),
   },
   {
     accessorKey: "totalDownloaded",
@@ -152,11 +186,17 @@ const createColumns = (
       <ButtonTable
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        Downloaded
+        DL'd
         <ArrowUpDown className="h-2 w-2" />
       </ButtonTable>
     ),
-    cell: ({ row }) => formatBytes(row.getValue<number>("totalDownloaded")),
+    size: 80,
+    minSize: 60,
+    cell: ({ row }) => (
+      <span className="block truncate">
+        {formatBytes(row.getValue<number>("totalDownloaded"))}
+      </span>
+    ),
   },
   {
     accessorKey: "totalUploaded",
@@ -164,11 +204,17 @@ const createColumns = (
       <ButtonTable
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        Uploaded
+        UL'd
         <ArrowUpDown className="h-2 w-2" />
       </ButtonTable>
     ),
-    cell: ({ row }) => formatBytes(row.getValue<number>("totalUploaded")),
+    size: 80,
+    minSize: 60,
+    cell: ({ row }) => (
+      <span className="block truncate">
+        {formatBytes(row.getValue<number>("totalUploaded"))}
+      </span>
+    ),
   },
   {
     accessorKey: "ratio",
@@ -180,7 +226,13 @@ const createColumns = (
         <ArrowUpDown className="h-2 w-2" />
       </ButtonTable>
     ),
-    cell: ({ row }) => row.getValue<number>("ratio").toFixed(2),
+    size: 60,
+    minSize: 45,
+    cell: ({ row }) => (
+      <span className="block truncate">
+        {row.getValue<number>("ratio").toFixed(2)}
+      </span>
+    ),
   },
   {
     accessorKey: "dateAdded",
@@ -192,9 +244,13 @@ const createColumns = (
         <ArrowUpDown className="h-2 w-2" />
       </ButtonTable>
     ),
+    size: 85,
+    minSize: 70,
     cell: ({ row }) => {
       const date = new Date(row.getValue<string>("dateAdded"));
-      return date.toLocaleDateString();
+      return (
+        <span className="block truncate">{date.toLocaleDateString()}</span>
+      );
     },
   },
   {
@@ -204,6 +260,7 @@ const createColumns = (
       <TorrentAction torrents={row.original} onUpdate={onUpdate} />
     ),
     enableSorting: false,
+    enableResizing: false,
     size: 50,
   },
 ];
@@ -278,7 +335,7 @@ export const TorrentList: FC<TorrentListProps> = ({
 
     // Schedule next fetch only if still mounted
     if (isMountedRef.current) {
-      timeoutRef.current = setTimeout(() => getAllDataRef.current?.(), 1000);
+      // timeoutRef.current = setTimeout(() => getAllDataRef.current?.(), 1000);
     }
   }, []);
 
@@ -314,15 +371,19 @@ export const TorrentList: FC<TorrentListProps> = ({
   const displayTorrents = filteredTorrents ?? data?.torrents ?? [];
 
   return (
-    <DataTable
-      className="h-full"
-      columns={columns}
-      data={displayTorrents}
-      enableSorting
-      enableRowSelection
-      onClickRow={handleClick}
-      rowClassName={getRowClassName}
-      onRowSelectionChange={onSelect}
-    />
+    <ScrollArea className="h-full">
+      <DataTable
+        className="h-full"
+        columns={columns}
+        data={displayTorrents}
+        enableSorting
+        enableRowSelection
+        enableColumnResizing
+        columnSizingStorageKey="torrent-list-column-sizes"
+        onClickRow={handleClick}
+        rowClassName={getRowClassName}
+        onRowSelectionChange={onSelect}
+      />
+    </ScrollArea>
   );
 };
