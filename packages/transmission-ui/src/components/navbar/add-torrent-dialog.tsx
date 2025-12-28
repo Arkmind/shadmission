@@ -189,40 +189,43 @@ export const AddTorrentDialog: React.FC = () => {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="torrent-file">Upload .torrent File</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  ref={fileInputRef}
-                  id="torrent-file"
-                  type="file"
-                  accept=".torrent"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <div className="flex gap-2 w-full">
+              <Input
+                ref={fileInputRef}
+                id="torrent-file"
+                type="file"
+                accept=".torrent"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <div
+                className={`grid gap-2 ${
+                  torrentFile ? "grid-cols-[1fr_auto]" : "grid-cols-1"
+                }`}
+              >
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="overflow-hidden"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <IconUpload className="size-4 shrink-0" />
+                  <span className="truncate">
+                    {torrentFile ? torrentFile.name : "Choose File"}
+                  </span>
+                </Button>
+                {torrentFile && (
                   <Button
                     type="button"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => fileInputRef.current?.click()}
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setTorrentFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
                   >
-                    <IconUpload className="size-4 mr-2" />
-                    {torrentFile ? torrentFile.name : "Choose File"}
+                    ×
                   </Button>
-                  {torrentFile && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setTorrentFile(null);
-                        if (fileInputRef.current)
-                          fileInputRef.current.value = "";
-                      }}
-                    >
-                      ×
-                    </Button>
-                  )}
-                </div>
+                )}
               </div>
             </div>
 

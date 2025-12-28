@@ -18,7 +18,7 @@ export const SelectionTorrentsList: FC = () => {
   }
 
   return (
-    <ScrollArea className="h-full">
+    <ScrollArea className="h-full [&_[data-radix-scroll-area-viewport]>:first-child]:block!">
       <div className="divide-y">
         {aggregatedData.map((torrent) => (
           <TorrentRow
