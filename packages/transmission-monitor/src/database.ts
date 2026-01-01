@@ -8,7 +8,9 @@ const DB_PATH = path.join(DATA_DIR, "snapshots.db");
 // Ensure data directory exists
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
-const db: DatabaseType = new Database(DB_PATH);
+const DB_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
+
+const db: DatabaseType = new Database(DB_PATH, { timeout: DB_TIMEOUT_MS });
 
 // Enable WAL mode for better concurrent read/write performance
 db.pragma("journal_mode = WAL");
@@ -58,6 +60,8 @@ export interface Snapshot {
   details: TorrentDetail[];
 }
 
+const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+
 const insertSnapshot = db.prepare(`
   INSERT INTO snapshots (timestamp, upload, download, details)
   VALUES (@timestamp, @upload, @download, @details)
@@ -80,8 +84,6 @@ const getSnapshotsInRange = db.prepare(`
 const deleteOldSnapshots = db.prepare(`
   DELETE FROM snapshots WHERE timestamp < ?
 `);
-
-const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
 export const saveSnapshot = (snapshot: Omit<Snapshot, "id">): void => {
   try {
