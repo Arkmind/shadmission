@@ -82,6 +82,8 @@ export const getTransferSnapshot = async () => {
       details: torrents,
     };
   } catch (error) {
+    console.error("Error retrieving torrent transfer data:", error);
+
     return {
       upload: null,
       download: null,

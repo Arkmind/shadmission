@@ -145,6 +145,9 @@ const fetchGluetun = async (path: string) => {
 
   const response = await fetch(url, { headers });
   if (!response.ok) {
+    console.error(
+      `Gluetun API error: ${response.status} ${response.statusText}`
+    );
     throw new Error(`Gluetun API error: ${response.status}`);
   }
   return response.json();

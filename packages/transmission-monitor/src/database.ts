@@ -84,49 +84,68 @@ const deleteOldSnapshots = db.prepare(`
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
 export const saveSnapshot = (snapshot: Omit<Snapshot, "id">): void => {
-  insertSnapshot.run({
-    timestamp: snapshot.timestamp,
-    upload: snapshot.upload,
-    download: snapshot.download,
-    details: JSON.stringify(snapshot.details),
-  });
+  try {
+    insertSnapshot.run({
+      timestamp: snapshot.timestamp,
+      upload: snapshot.upload,
+      download: snapshot.download,
+      details: JSON.stringify(snapshot.details),
+    });
+  } catch (error) {
+    console.error("[Database] Failed to save snapshot:", error);
+  }
 };
 
 export const getSnapshots = (seconds: number): Snapshot[] => {
-  const since = Date.now() - seconds * 1000;
-  const rows = getSnapshotsSince.all(since) as {
-    id: number;
-    timestamp: number;
-    upload: number;
-    download: number;
-    details: string;
-  }[];
+  try {
+    const since = Date.now() - seconds * 1000;
+    const rows = getSnapshotsSince.all(since) as {
+      id: number;
+      timestamp: number;
+      upload: number;
+      download: number;
+      details: string;
+    }[];
 
-  return rows.map((row) => ({
-    ...row,
-    details: JSON.parse(row.details),
-  }));
+    return rows.map((row) => ({
+      ...row,
+      details: JSON.parse(row.details),
+    }));
+  } catch (error) {
+    console.error("[Database] Failed to get snapshots:", error);
+    return [];
+  }
 };
 
 export const getSnapshotsByRange = (from: number, to: number): Snapshot[] => {
-  const rows = getSnapshotsInRange.all(from, to) as {
-    id: number;
-    timestamp: number;
-    upload: number;
-    download: number;
-    details: string;
-  }[];
+  try {
+    const rows = getSnapshotsInRange.all(from, to) as {
+      id: number;
+      timestamp: number;
+      upload: number;
+      download: number;
+      details: string;
+    }[];
 
-  return rows.map((row) => ({
-    ...row,
-    details: JSON.parse(row.details),
-  }));
+    return rows.map((row) => ({
+      ...row,
+      details: JSON.parse(row.details),
+    }));
+  } catch (error) {
+    console.error("[Database] Failed to get snapshots by range:", error);
+    return [];
+  }
 };
 
 export const cleanupOldSnapshots = (): number => {
-  const cutoff = Date.now() - TWENTY_FOUR_HOURS_MS;
-  const result = deleteOldSnapshots.run(cutoff);
-  return result.changes;
+  try {
+    const cutoff = Date.now() - TWENTY_FOUR_HOURS_MS;
+    const result = deleteOldSnapshots.run(cutoff);
+    return result.changes;
+  } catch (error) {
+    console.error("[Database] Failed to cleanup old snapshots:", error);
+    return 0;
+  }
 };
 
 export default db;
