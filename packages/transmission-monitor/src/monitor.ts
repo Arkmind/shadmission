@@ -31,44 +31,57 @@ export interface TorrentTransfer {
 export const retrieveTorrentsTransfer = async (): Promise<
   TorrentTransfer[]
 > => {
-  const data = await client.getAllData();
+  try {
+    const data = await client.getAllData();
 
-  return data.torrents
-    .filter(
-      (t) =>
-        t.state === TorrentState.downloading || t.state === TorrentState.seeding
-    )
-    .map((torrent) => ({
-      torrent: torrent.name,
-      torrent_id: torrent.raw?.id ?? 0,
-      upload: torrent.uploadSpeed,
-      download: torrent.downloadSpeed,
-      peers: (torrent.raw?.peers ?? []).map(
-        (peer: {
-          address: string;
-          port: number;
-          clientName: string;
-          rateToClient: number;
-          rateToPeer: number;
-          progress: number;
-          isDownloadingFrom: boolean;
-          isUploadingTo: boolean;
-        }) => {
-          const geo = geoip.lookup(peer.address);
-          return {
-            ip: peer.address,
-            port: peer.port,
-            country: geo?.country ?? null,
-            client: peer.clientName,
-            downloadSpeed: peer.rateToClient,
-            uploadSpeed: peer.rateToPeer,
-            isSeeder: peer.progress === 1,
-            isDownloading: peer.isDownloadingFrom,
-            isUploading: peer.isUploadingTo,
-          };
-        }
-      ),
-    }));
+    if (!data || !data.torrents) {
+      console.warn(
+        "Transmission returned no data or torrents array is missing"
+      );
+      return [];
+    }
+
+    return data.torrents
+      .filter(
+        (t) =>
+          t.state === TorrentState.downloading ||
+          t.state === TorrentState.seeding
+      )
+      .map((torrent) => ({
+        torrent: torrent.name,
+        torrent_id: torrent.raw?.id ?? 0,
+        upload: torrent.uploadSpeed,
+        download: torrent.downloadSpeed,
+        peers: (torrent.raw?.peers ?? []).map(
+          (peer: {
+            address: string;
+            port: number;
+            clientName: string;
+            rateToClient: number;
+            rateToPeer: number;
+            progress: number;
+            isDownloadingFrom: boolean;
+            isUploadingTo: boolean;
+          }) => {
+            const geo = geoip.lookup(peer.address);
+            return {
+              ip: peer.address,
+              port: peer.port,
+              country: geo?.country ?? null,
+              client: peer.clientName,
+              downloadSpeed: peer.rateToClient,
+              uploadSpeed: peer.rateToPeer,
+              isSeeder: peer.progress === 1,
+              isDownloading: peer.isDownloadingFrom,
+              isUploading: peer.isUploadingTo,
+            };
+          }
+        ),
+      }));
+  } catch (error) {
+    console.error("Error fetching torrents from Transmission:", error);
+    return [];
+  }
 };
 
 export const getTransferSnapshot = async () => {
