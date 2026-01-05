@@ -22,6 +22,7 @@ export type TorrentStateFilter =
   | "paused"
   | "checking"
   | "error"
+  | "warning"
   | "queued";
 
 export type PriorityFilter = "all" | "high" | "normal" | "low";
@@ -47,6 +48,9 @@ interface RawTorrentData {
   id: number;
   labels?: string[];
   bandwidthPriority?: number;
+  error: number;
+  errorString?: string;
+  trackers?: Array<{ announce: string }>;
 }
 
 const STATE_OPTIONS: { value: TorrentStateFilter; label: string }[] = [
@@ -57,6 +61,7 @@ const STATE_OPTIONS: { value: TorrentStateFilter; label: string }[] = [
   { value: "checking", label: "Checking" },
   { value: "queued", label: "Queued" },
   { value: "error", label: "Error" },
+  { value: "warning", label: "Warning" },
 ];
 
 const PRIORITY_OPTIONS: { value: PriorityFilter; label: string }[] = [
@@ -301,8 +306,18 @@ export const filterTorrents = (
     }
 
     // State filter
-    if (filters.state !== "all" && torrent.state !== filters.state) {
-      return false;
+    if (filters.state !== "all") {
+      if (filters.state === "error") {
+        if (torrent.state !== "error" && raw?.error !== 3) {
+          return false;
+        }
+      } else if (filters.state === "warning") {
+        if (torrent.state !== "error" && raw?.error !== 2) {
+          return false;
+        }
+      } else if (torrent.state !== filters.state) {
+        return false;
+      }
     }
 
     // Priority filter

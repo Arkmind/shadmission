@@ -82,13 +82,11 @@ export const SessionStatus: FC<SessionStatusProps> = ({ torrents = [] }) => {
   // Get torrents with errors
   const errorTorrents = useMemo<ErrorTorrent[]>(() => {
     return torrents
-      .filter((t) => t.state === "error")
+      .filter((t) => t.state === "error" || t.raw.error !== 0)
       .map((t) => ({
         id: t.id,
         name: t.name,
-        errorString:
-          (t as unknown as { errorString?: string }).errorString ||
-          "Unknown error",
+        errorString: t.raw.errorString || "Unknown error",
       }));
   }, [torrents]);
 
@@ -172,7 +170,7 @@ export const SessionStatus: FC<SessionStatusProps> = ({ torrents = [] }) => {
         ) : (
           <div className="flex-1 min-h-0 relative">
             <div className="absolute inset-0">
-              <ScrollArea className="h-full w-full">
+              <ScrollArea className="h-full [&_[data-radix-scroll-area-viewport]>:first-child]:block!">
                 <div className="space-y-2 pr-3 pb-3">
                   {errorTorrents.map((t) => (
                     <div

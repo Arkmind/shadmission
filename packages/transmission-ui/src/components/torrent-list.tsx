@@ -22,11 +22,14 @@ import { ScrollArea } from "./ui/scroll-area";
 
 // Get row class based on torrent state
 const getRowClassName = (torrent: NormalizedTorrent): string => {
-  if (torrent.state === "error") {
-    return "bg-red-500/10 hover:bg-red-500/20";
-  }
   if (torrent.state === "checking") {
     return "bg-purple-500/10 hover:bg-purple-500/20";
+  }
+  if (torrent.state === "error" || torrent.raw.error === 3) {
+    return "bg-red-500/10 hover:bg-red-500/20";
+  }
+  if (torrent.raw.error === 2) {
+    return "bg-yellow-500/10 hover:bg-yellow-500/20";
   }
   if (torrent.state === "paused") {
     return "bg-muted/50 hover:bg-muted/70 text-muted-foreground";
