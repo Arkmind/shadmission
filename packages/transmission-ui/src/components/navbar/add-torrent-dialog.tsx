@@ -24,7 +24,7 @@ interface SessionResponse {
 export const AddTorrentDialog: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [torrentUrl, setTorrentUrl] = useState("");
-  const [torrentFile, setTorrentFile] = useState<File | null>(null);
+  const [torrentFiles, setTorrentFiles] = useState<File[]>([]);
   const [downloadDir, setDownloadDir] = useState("");
   const [defaultDownloadDir, setDefaultDownloadDir] = useState("");
   const [isAdding, setIsAdding] = useState(false);
@@ -52,13 +52,13 @@ export const AddTorrentDialog: React.FC = () => {
 
   const resetForm = useCallback(() => {
     setTorrentUrl("");
-    setTorrentFile(null);
+    setTorrentFiles([]);
     setDownloadDir(defaultDownloadDir);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, [defaultDownloadDir]);
 
   const handleAddTorrent = useCallback(async () => {
-    if (!torrentUrl.trim() && !torrentFile) {
+    if (!torrentUrl.trim() && torrentFiles.length === 0) {
       toast.error("Please enter a torrent URL/magnet link or select a file");
       return;
     }
@@ -67,18 +67,43 @@ export const AddTorrentDialog: React.FC = () => {
     try {
       const baseArgs = downloadDir ? { "download-dir": downloadDir } : {};
 
-      if (torrentFile) {
-        const reader = new FileReader();
-        const base64 = await new Promise<string>((resolve, reject) => {
-          reader.onload = () => {
-            const result = reader.result as string;
-            resolve(result.split(",")[1]);
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(torrentFile);
-        });
-        await client.request("torrent-add", { ...baseArgs, metainfo: base64 });
-        toast.success(`Torrent "${torrentFile.name}" added successfully`);
+      if (torrentFiles.length > 0) {
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const file of torrentFiles) {
+          try {
+            const reader = new FileReader();
+            const base64 = await new Promise<string>((resolve, reject) => {
+              reader.onload = () => {
+                const result = reader.result as string;
+                resolve(result.split(",")[1]);
+              };
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+            await client.request("torrent-add", {
+              ...baseArgs,
+              metainfo: base64,
+            });
+            successCount++;
+          } catch (error) {
+            console.error(`Failed to add torrent "${file.name}":`, error);
+            failCount++;
+          }
+        }
+
+        if (failCount === 0) {
+          toast.success(
+            torrentFiles.length === 1
+              ? `Torrent "${torrentFiles[0].name}" added successfully`
+              : `${successCount} torrents added successfully`
+          );
+        } else if (successCount > 0) {
+          toast.warning(`${successCount} torrents added, ${failCount} failed`);
+        } else {
+          toast.error(`Failed to add ${failCount} torrent(s)`);
+        }
       } else {
         await client.request("torrent-add", {
           ...baseArgs,
@@ -97,13 +122,13 @@ export const AddTorrentDialog: React.FC = () => {
     } finally {
       setIsAdding(false);
     }
-  }, [torrentUrl, torrentFile, downloadDir, resetForm]);
+  }, [torrentUrl, torrentFiles, downloadDir, resetForm]);
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        setTorrentFile(file);
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        setTorrentFiles((prev) => [...prev, ...Array.from(files)]);
         setTorrentUrl("");
       }
     },
@@ -135,16 +160,22 @@ export const AddTorrentDialog: React.FC = () => {
     e.stopPropagation();
     setIsDragging(false);
 
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      const file = files[0];
-      if (file.name.endsWith(".torrent")) {
-        setTorrentFile(file);
-        setTorrentUrl("");
-        if (fileInputRef.current) fileInputRef.current.value = "";
-      } else {
-        toast.error("Please drop a .torrent file");
-      }
+    const files = Array.from(e.dataTransfer.files);
+    const torrentFilesDropped = files.filter((file) =>
+      file.name.endsWith(".torrent")
+    );
+
+    if (torrentFilesDropped.length > 0) {
+      setTorrentFiles((prev) => [...prev, ...torrentFilesDropped]);
+      setTorrentUrl("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+
+    const nonTorrentCount = files.length - torrentFilesDropped.length;
+    if (nonTorrentCount > 0) {
+      toast.error(
+        `${nonTorrentCount} file(s) skipped - only .torrent files are accepted`
+      );
     }
   }, []);
 
@@ -175,18 +206,18 @@ export const AddTorrentDialog: React.FC = () => {
               <div className="text-center">
                 <IconUpload className="size-12 mx-auto mb-2 text-primary" />
                 <p className="text-lg font-medium text-primary">
-                  Drop .torrent file here
+                  Drop .torrent file(s) here
                 </p>
               </div>
             </div>
           )}
-          <DialogHeader>
+          <DialogHeader className="overflow-hidden">
             <DialogTitle>Add Torrent</DialogTitle>
             <DialogDescription>
               Enter a magnet link, torrent URL, or drag & drop a .torrent file.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 overflow-hidden">
             <div className="space-y-2">
               <Label htmlFor="torrent-file">Upload .torrent File</Label>
               <Input
@@ -194,37 +225,66 @@ export const AddTorrentDialog: React.FC = () => {
                 id="torrent-file"
                 type="file"
                 accept=".torrent"
+                multiple
                 onChange={handleFileChange}
                 className="hidden"
               />
-              <div
-                className={`grid gap-2 ${
-                  torrentFile ? "grid-cols-[1fr_auto]" : "grid-cols-1"
-                }`}
-              >
+              <div className="space-y-2">
                 <Button
                   type="button"
                   variant="outline"
-                  className="overflow-hidden"
+                  className="w-full overflow-hidden"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <IconUpload className="size-4 shrink-0" />
                   <span className="truncate">
-                    {torrentFile ? torrentFile.name : "Choose File"}
+                    {torrentFiles.length > 0
+                      ? `Add more files (${torrentFiles.length} selected)`
+                      : "Choose Files"}
                   </span>
                 </Button>
-                {torrentFile && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setTorrentFile(null);
-                      if (fileInputRef.current) fileInputRef.current.value = "";
-                    }}
-                  >
-                    ×
-                  </Button>
+                {torrentFiles.length > 0 && (
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {torrentFiles.map((file, index) => (
+                      <div
+                        key={`${file.name}-${index}`}
+                        className="flex items-center justify-between gap-2 text-sm bg-muted/50 rounded px-2 py-1 min-w-0"
+                      >
+                        <span
+                          className="truncate min-w-0 flex-1"
+                          title={file.name}
+                        >
+                          {file.name}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-6 shrink-0"
+                          onClick={() => {
+                            setTorrentFiles((prev) =>
+                              prev.filter((_, i) => i !== index)
+                            );
+                          }}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs text-muted-foreground"
+                      onClick={() => {
+                        setTorrentFiles([]);
+                        if (fileInputRef.current)
+                          fileInputRef.current.value = "";
+                      }}
+                    >
+                      Clear all
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
@@ -249,7 +309,7 @@ export const AddTorrentDialog: React.FC = () => {
                 onChange={(e) => {
                   setTorrentUrl(e.target.value);
                   if (e.target.value) {
-                    setTorrentFile(null);
+                    setTorrentFiles([]);
                     if (fileInputRef.current) fileInputRef.current.value = "";
                   }
                 }}

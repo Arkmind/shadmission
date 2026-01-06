@@ -1,9 +1,34 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { formatBytes, formatEta, formatSpeed, formatTime } from "@/lib/utils";
-import { memo, type FC } from "react";
+import { memo, type FC, type ReactNode } from "react";
 import type { RawTorrentData, TorrentTabProps } from "./types";
 import { formatDateString } from "./utils";
+
+const parseLinks = (text: string): ReactNode => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+
+  if (parts.length === 1) return text;
+
+  return parts.map((part, index) => {
+    if (urlRegex.test(part)) {
+      urlRegex.lastIndex = 0; // Reset regex state
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:underline"
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+};
 
 export const DetailsTab: FC<TorrentTabProps> = memo(
   ({ torrent }) => {
@@ -32,7 +57,10 @@ export const DetailsTab: FC<TorrentTabProps> = memo(
         label: "Peers",
         value: `${torrent.connectedPeers} / ${torrent.totalPeers}`,
       },
-      { label: "Comment", value: raw?.comment || "N/A" },
+      {
+        label: "Comment",
+        value: raw?.comment ? parseLinks(raw.comment) : "N/A",
+      },
       { label: "Creator", value: raw?.creator || "N/A" },
       { label: "Private", value: raw?.isPrivate ? "Yes" : "No" },
       {
