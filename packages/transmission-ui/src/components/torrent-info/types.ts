@@ -71,4 +71,6 @@ export interface RawTorrentData {
     fromPex: number;
     fromTracker: number;
   };
+  error?: number;
+  errorMessage?: string;
 }

@@ -88,6 +88,17 @@ export const DetailsTab: FC<TorrentTabProps> = memo(
             </div>
           ))}
         </div>
+        {raw?.errorMessage && (
+          <>
+            <Separator className="my-4" />
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-muted-foreground uppercase tracking-wide">
+                Error Message
+              </span>
+              <span className="text-sm text-red-600">{raw.errorMessage}</span>
+            </div>
+          </>
+        )}
         {raw?.magnetLink && (
           <>
             <Separator className="my-4" />
